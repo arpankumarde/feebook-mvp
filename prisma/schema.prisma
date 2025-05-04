@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  INSTITUTION
+  STUDENT
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  ONLINE
+  OFFLINE
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum AccountType {
+  SAVINGS
+  CURRENT
+}
+
+model User {
+  id          String       @id @default(uuid())
+  email       String       @unique
+  phone       String?      @unique
+  password    String
+  name        String
+  role        UserRole
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  institution Institution?
+  student     Student?
+  admin       Admin?
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Institution {
+  id                  String               @id @default(uuid())
+  userId              String               @unique
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                String
+  address             String?
+  city                String?
+  state               String?
+  pincode             String?
+  isVerified          Boolean              @default(false)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  studentInstitutions StudentInstitution[]
+  withdrawals         WithdrawalRequest[]
+  studentFees         StudentFee[]
+  wallet              Wallet?
+  payments            Payment[]
+}
+
+model Student {
+  id           String               @id @default(uuid())
+  userId       String               @unique
+  user         User                 @relation(fields: [userId], references: [id])
+  name         String
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  institutions StudentInstitution[]
+  fees         StudentFee[]
+  payments     Payment[]
+}
+
+model StudentInstitution {
+  enrollmentId  String      @id @default(uuid())
+  studentId     String
+  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  joinDate      DateTime    @default(now())
+
+  @@unique([institutionId, enrollmentId])
+  @@unique([studentId, institutionId])
+}
+
+model StudentFee {
+  id              String           @id @default(uuid())
+  studentId       String
+  student         Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  institutionId   String
+  institution     Institution      @relation(fields: [institutionId], references: [id])
+  title           String
+  totalAmount     Decimal          @db.Decimal(10, 2)
+  monthlyAmount   Decimal          @db.Decimal(10, 2)
+  startDate       DateTime
+  endDate         DateTime
+  paidAmount      Decimal          @default(0) @db.Decimal(10, 2)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  payments        Payment[]
+  paymentSessions PaymentSession[]
+}
+
+model PaymentSession {
+  id                 String     @id @default(uuid())
+  studentFeeId       String
+  studentFee         StudentFee @relation(fields: [studentFeeId], references: [id], onDelete: Cascade)
+  month              DateTime
+  isPaid             Boolean    @default(false)
+  manuallyMarkedPaid Boolean    @default(false)
+  dueAmount          Decimal    @db.Decimal(10, 2)
+  paidAmount         Decimal    @default(0) @db.Decimal(10, 2)
+  dueDate            DateTime
+  paidDate           DateTime?
+  payments           Payment[]
+
+  @@unique([studentFeeId, month])
+}
+
+model Payment {
+  id               String          @id @default(uuid())
+  studentFeeId     String?
+  studentFee       StudentFee?     @relation(fields: [studentFeeId], references: [id])
+  paymentSessionId String?
+  paymentSession   PaymentSession? @relation(fields: [paymentSessionId], references: [id])
+  studentId        String
+  student          Student         @relation(fields: [studentId], references: [id])
+  amount           Decimal         @db.Decimal(10, 2)
+  method           PaymentMethod
+  status           PaymentStatus   @default(PENDING)
+  transactionId    String?
+  paymentDate      DateTime        @default(now())
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  institutionId    String
+  institution      Institution     @relation(fields: [institutionId], references: [id])
+  invoice          Invoice?
+}
+
+model Invoice {
+  id            String   @id @default(uuid())
+  paymentId     String   @unique
+  payment       Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceNumber String   @unique
+  generatedDate DateTime @default(now())
+  pdfUrl        String?
+}
+
+model Wallet {
+  id            String        @id @default(uuid())
+  institutionId String        @unique
+  institution   Institution   @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  balance       Decimal       @default(0) @db.Decimal(10, 2)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now())
+  transactions  Transaction[]
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  walletId    String
+  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  amount      Decimal  @db.Decimal(10, 2)
+  type        String
+  description String?
+  refId       String?
+  createdAt   DateTime @default(now())
+}
+
+model WithdrawalRequest {
+  id            String           @id @default(uuid())
+  institutionId String
+  institution   Institution      @relation(fields: [institutionId], references: [id])
+  amount        Decimal          @db.Decimal(10, 2)
+  status        WithdrawalStatus @default(PENDING)
+  accountNumber String?
+  ifsc          String?
+  bankName      String?
+  accountName   String?
+  accountType   AccountType      @default(SAVINGS)
+  remarks       String?
+  requestedAt   DateTime         @default(now())
+  processedAt   DateTime?
+  updatedAt     DateTime         @updatedAt
+}
