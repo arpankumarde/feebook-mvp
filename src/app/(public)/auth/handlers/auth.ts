@@ -1,6 +1,7 @@
 "use server";
 
 import db from "@/lib/db";
+import * as bcrypt from "bcryptjs";
 
 export type RequestInstituteData = {
   name: string;
@@ -31,12 +32,14 @@ export async function requestInstitute(data: RequestInstituteData) {
 
     // Create a new institute request record
     await db.$transaction(async (tx) => {
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+
       const newUser = await tx.user.create({
         data: {
           name: data.name,
           email: data.email,
           phone: data.phone,
-          password: data.password,
+          password: hashedPassword,
           role: "INSTITUTION",
         },
       });
@@ -56,6 +59,43 @@ export async function requestInstitute(data: RequestInstituteData) {
     console.error("Error submitting institute request:", error);
     return {
       error: "An error occurred while submitting your request",
+    };
+  }
+}
+
+export async function loginInstitute(data: {
+  email: string;
+  password: string;
+}) {
+  try {
+    const user = await db.user.findUnique({
+      where: {
+        email: data.email,
+      },
+    });
+
+    if (!user) {
+      return {
+        error: "Invalid credentials",
+      };
+    }
+
+    const isPasswordValid = await bcrypt.compare(data.password, user.password);
+
+    if (!isPasswordValid) {
+      return {
+        error: "Invalid credentials",
+      };
+    }
+
+    return {
+      success: true,
+      user,
+    };
+  } catch (error) {
+    console.error("Error during login:", error);
+    return {
+      error: "An error occurred during login",
     };
   }
 }
