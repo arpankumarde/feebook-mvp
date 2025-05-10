@@ -11,7 +11,6 @@ datasource db {
 enum UserRole {
   ADMIN
   INSTITUTION
-  STUDENT
 }
 
 enum PaymentStatus {
@@ -48,7 +47,6 @@ model User {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   institution Institution?
-  student     Student?
   admin       Admin?
 }
 
@@ -61,52 +59,45 @@ model Admin {
 }
 
 model Institution {
-  id                  String               @id @default(uuid())
-  userId              String               @unique
-  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name                String
-  address             String?
-  city                String?
-  state               String?
-  pincode             String?
-  isVerified          Boolean              @default(false)
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  studentInstitutions StudentInstitution[]
-  withdrawals         WithdrawalRequest[]
-  studentFees         StudentFee[]
-  wallet              Wallet?
-  payments            Payment[]
+  id          String              @id @default(uuid())
+  userId      String              @unique
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  address     String?
+  city        String?
+  state       String?
+  pincode     String?
+  isVerified  Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  enrollments Enrollment[]
+  withdrawals WithdrawalRequest[]
+  fees        Fee[]
+  wallet      Wallet?
+  payments    Payment[]
 }
 
-model Student {
-  id           String               @id @default(uuid())
-  userId       String               @unique
-  user         User                 @relation(fields: [userId], references: [id])
-  name         String
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
-  institutions StudentInstitution[]
-  fees         StudentFee[]
-  payments     Payment[]
-}
-
-model StudentInstitution {
-  enrollmentId  String      @id @default(uuid())
-  studentId     String
-  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+model Enrollment {
+  id            String      @id @default(uuid())
   institutionId String
   institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  studentName   String
+  studentEmail  String?
+  studentPhone  String?
+  enrollmentId  String      @unique
   joinDate      DateTime    @default(now())
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  fees          Fee[]
+  payments      Payment[]
 
-  @@unique([institutionId, enrollmentId])
-  @@unique([studentId, institutionId])
+  @@index([enrollmentId])
 }
 
-model StudentFee {
+model Fee {
   id              String           @id @default(uuid())
-  studentId       String
-  student         Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  enrollmentId    String
+  enrollment      Enrollment       @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
   institutionId   String
   institution     Institution      @relation(fields: [institutionId], references: [id])
   title           String
@@ -122,29 +113,29 @@ model StudentFee {
 }
 
 model PaymentSession {
-  id                 String     @id @default(uuid())
-  studentFeeId       String
-  studentFee         StudentFee @relation(fields: [studentFeeId], references: [id], onDelete: Cascade)
+  id                 String    @id @default(uuid())
+  feeId              String
+  fee                Fee       @relation(fields: [feeId], references: [id], onDelete: Cascade)
   month              DateTime
-  isPaid             Boolean    @default(false)
-  manuallyMarkedPaid Boolean    @default(false)
-  dueAmount          Decimal    @db.Decimal(10, 2)
-  paidAmount         Decimal    @default(0) @db.Decimal(10, 2)
+  isPaid             Boolean   @default(false)
+  manuallyMarkedPaid Boolean   @default(false)
+  dueAmount          Decimal   @db.Decimal(10, 2)
+  paidAmount         Decimal   @default(0) @db.Decimal(10, 2)
   dueDate            DateTime
   paidDate           DateTime?
   payments           Payment[]
 
-  @@unique([studentFeeId, month])
+  @@unique([feeId, month])
 }
 
 model Payment {
   id               String          @id @default(uuid())
-  studentFeeId     String?
-  studentFee       StudentFee?     @relation(fields: [studentFeeId], references: [id])
+  feeId            String?
+  fee              Fee?            @relation(fields: [feeId], references: [id])
   paymentSessionId String?
   paymentSession   PaymentSession? @relation(fields: [paymentSessionId], references: [id])
-  studentId        String
-  student          Student         @relation(fields: [studentId], references: [id])
+  enrollmentId     String
+  enrollment       Enrollment      @relation(fields: [enrollmentId], references: [id])
   amount           Decimal         @db.Decimal(10, 2)
   method           PaymentMethod
   status           PaymentStatus   @default(PENDING)
@@ -155,6 +146,11 @@ model Payment {
   institutionId    String
   institution      Institution     @relation(fields: [institutionId], references: [id])
   invoice          Invoice?
+  payerName        String?
+  payerPhone       String?
+  payerEmail       String?
+  remarks          String?
+  GatewayResponse  Json?
 }
 
 model Invoice {
