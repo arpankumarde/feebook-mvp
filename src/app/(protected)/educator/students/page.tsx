@@ -9,18 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle } from "lucide-react";
 import { getEnrollments } from "./handlers/getEnrollments";
 import { toast } from "sonner";
-import { Enrollment, Fee } from "@/generated/prisma";
-
-interface ExtendedEnrollment extends Enrollment {
-  fees: Fee[];
-}
+import { Enrollment } from "@/generated/prisma";
 
 const Page = () => {
   const user: ExtendedInstituteUserType = JSON.parse(
     getCookie("__fb_user") || "{}"
   );
 
-  const [enrollments, setEnrollments] = useState<ExtendedEnrollment[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

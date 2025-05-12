@@ -20,6 +20,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  format,
+  addMonths,
+  differenceInMonths,
+  parse,
+  startOfMonth,
+} from "date-fns";
 
 const Page = () => {
   const user: ExtendedInstituteUserType = JSON.parse(
@@ -31,59 +38,49 @@ const Page = () => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [totalAmount, setTotalAmount] = useState<number>(0);
-  const [minEndDate, setMinEndDate] = useState<string>("");
 
   // Set default dates when component mounts
   useEffect(() => {
-    // Set default start date to first day of current month
+    // Set default start date to current month
     const today = new Date();
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const formattedStartDate = firstDayOfMonth.toISOString().split("T")[0];
-    setStartDate(formattedStartDate);
+    const currentMonth = format(today, "yyyy-MM");
+    setStartDate(currentMonth);
 
-    // Set min end date to be the same as start date
-    setMinEndDate(formattedStartDate);
-
-    // Set default end date to first day of next month
-    const firstDayOfNextMonth = new Date(
-      today.getFullYear(),
-      today.getMonth() + 1,
-      1
-    );
-    const formattedEndDate = firstDayOfNextMonth.toISOString().split("T")[0];
-    setEndDate(formattedEndDate);
+    // Set default end date to next month
+    const nextMonth = format(addMonths(today, 1), "yyyy-MM");
+    setEndDate(nextMonth);
   }, []);
-
-  // Helper function to ensure date is always the first day of the month
-  const getFirstDayOfMonth = (dateString: string): string => {
-    const date = new Date(dateString);
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    return firstDay.toISOString().split("T")[0];
-  };
 
   // Calculate total amount whenever monthly amount or dates change
   useEffect(() => {
     if (monthlyAmount && startDate && endDate) {
-      // Ensure we're working with first day of month dates
-      const start = new Date(getFirstDayOfMonth(startDate));
-      const end = new Date(getFirstDayOfMonth(endDate));
+      try {
+        // Parse the month strings to create date objects using date-fns
+        // Create dates in local timezone first
+        const start = parse(startDate, "yyyy-MM", new Date());
+        const end = parse(endDate, "yyyy-MM", new Date());
 
-      if (start > end) {
-        // Invalid date range
+        // Ensure we're working with the first day of each month
+        const startMonth = startOfMonth(start);
+        const endMonth = startOfMonth(end);
+
+        if (startMonth > endMonth) {
+          // Invalid date range
+          setTotalAmount(0);
+          return;
+        }
+
+        // Calculate number of months between start and end dates using date-fns
+        // Add 1 to include both start and end months
+        const numberOfMonths = differenceInMonths(endMonth, startMonth) + 1;
+
+        // Calculate total amount
+        const calculatedTotal = monthlyAmount * numberOfMonths;
+        setTotalAmount(parseFloat(calculatedTotal.toFixed(2)));
+      } catch (error) {
+        console.error("Error calculating total amount:", error);
         setTotalAmount(0);
-        return;
       }
-
-      // Calculate number of months between start and end dates
-      const monthDiff =
-        (end.getFullYear() - start.getFullYear()) * 12 +
-        (end.getMonth() - start.getMonth());
-      // Add 1 to include both start and end months
-      const numberOfMonths = monthDiff + 1;
-
-      // Calculate total amount
-      const calculatedTotal = monthlyAmount * numberOfMonths;
-      setTotalAmount(parseFloat(calculatedTotal.toFixed(2)));
     } else {
       setTotalAmount(0);
     }
@@ -92,6 +89,9 @@ const Page = () => {
   const handleSubmit = async (formData: FormData) => {
     try {
       setIsSubmitting(true);
+
+      const formDataObj = Object.fromEntries(formData.entries());
+      console.log("Form data:", formDataObj);
 
       // Parse form data
       const phoneNumber = formData.get("studentPhone") as string;
@@ -112,18 +112,16 @@ const Page = () => {
         return;
       }
 
-      // Ensure dates are first day of month
-      const start = new Date(getFirstDayOfMonth(startDate));
-      const end = new Date(getFirstDayOfMonth(endDate));
+      // Parse the month strings to create date objects using date-fns
+      const start = parse(startDate, "yyyy-MM", new Date());
+      const end = parse(endDate, "yyyy-MM", new Date());
 
-      if (start > end) {
+      // Ensure we're working with the first day of each month
+      const startMonth = startOfMonth(start);
+      const endMonth = startOfMonth(end);
+
+      if (startMonth > endMonth) {
         toast.error("End date must be after start date");
-        return;
-      }
-
-      // Verify both dates are first day of month
-      if (start.getDate() !== 1 || end.getDate() !== 1) {
-        toast.error("Both dates must be the first day of a month");
         return;
       }
 
@@ -139,6 +137,19 @@ const Page = () => {
         return;
       }
 
+      // Convert dates to UTC+5:30 (Indian Standard Time)
+      // This ensures all dates are stored consistently in the database with IST timezone
+      // Create new Date objects with the IST offset (+5:30 hours = 330 minutes)
+      const istOffsetMinutes = 330; // +5:30 hours in minutes
+
+      // Create Date objects for the first day of the selected month in UTC
+      const startMonthUTC = new Date(startMonth);
+      const endMonthUTC = new Date(endMonth);
+
+      // Adjust for IST by adding the offset
+      startMonthUTC.setMinutes(startMonthUTC.getMinutes() + istOffsetMinutes);
+      endMonthUTC.setMinutes(endMonthUTC.getMinutes() + istOffsetMinutes);
+
       const data: EnrollmentFormData = {
         studentName: formData.get("studentName") as string,
         studentEmail: (formData.get("studentEmail") as string) || null,
@@ -147,9 +158,15 @@ const Page = () => {
         feeTitle: formData.get("feeTitle") as string,
         totalAmount: totalAmount,
         monthlyAmount: monthlyAmount,
-        startDate: new Date(getFirstDayOfMonth(startDate)),
-        endDate: new Date(getFirstDayOfMonth(endDate)),
+        // Store dates in UTC+5:30 timezone (IST)
+        startDate: startMonthUTC,
+        endDate: endMonthUTC,
       };
+
+      console.log("Dates in IST:", {
+        startDate: startMonthUTC.toISOString(),
+        endDate: endMonthUTC.toISOString(),
+      });
 
       const result = await createEnrollment(data);
 
@@ -187,7 +204,13 @@ const Page = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={handleSubmit} className="space-y-6">
+          <form
+            action={(e) => {
+              console.log(e);
+              handleSubmit(e);
+            }}
+            className="space-y-6"
+          >
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Student Information</h3>
 
@@ -302,32 +325,36 @@ const Page = () => {
                     id="startDate"
                     name="startDate"
                     type="month"
-                    value={startDate.substring(0, 7)}
+                    value={startDate}
                     onChange={(e) => {
-                      // Convert month input to first day of selected month
                       const selectedMonth = e.target.value;
-                      const firstDayDate = selectedMonth + "-01";
-                      const newStartDate = getFirstDayOfMonth(firstDayDate);
-                      setStartDate(newStartDate);
-
-                      // Update minimum end date when start date changes
-                      setMinEndDate(newStartDate);
+                      setStartDate(selectedMonth);
 
                       // If end date is before new start date, update end date
-                      if (
-                        endDate &&
-                        new Date(endDate) < new Date(newStartDate)
-                      ) {
-                        // Set end date to first day of next month
-                        const startDateObj = new Date(newStartDate);
-                        const firstDayOfNextMonth = new Date(
-                          startDateObj.getFullYear(),
-                          startDateObj.getMonth() + 1,
-                          1
-                        );
-                        setEndDate(
-                          firstDayOfNextMonth.toISOString().split("T")[0]
-                        );
+                      if (endDate) {
+                        try {
+                          const selectedStartDate = parse(
+                            selectedMonth,
+                            "yyyy-MM",
+                            new Date()
+                          );
+                          const currentEndDate = parse(
+                            endDate,
+                            "yyyy-MM",
+                            new Date()
+                          );
+
+                          if (currentEndDate < selectedStartDate) {
+                            // Set end date to next month after start date using date-fns
+                            const nextMonth = format(
+                              addMonths(selectedStartDate, 1),
+                              "yyyy-MM"
+                            );
+                            setEndDate(nextMonth);
+                          }
+                        } catch (error) {
+                          console.error("Error updating end date:", error);
+                        }
                       }
                     }}
                     required
@@ -343,13 +370,11 @@ const Page = () => {
                     id="endDate"
                     name="endDate"
                     type="month"
-                    value={endDate.substring(0, 7)}
-                    min={minEndDate.substring(0, 7)}
+                    value={endDate}
+                    min={startDate} // Minimum end date is the start date
                     onChange={(e) => {
-                      // Convert month input to first day of selected month
                       const selectedMonth = e.target.value;
-                      const firstDayDate = selectedMonth + "-01";
-                      setEndDate(getFirstDayOfMonth(firstDayDate));
+                      setEndDate(selectedMonth);
                     }}
                     required
                   />

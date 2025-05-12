@@ -31,7 +31,7 @@ export async function createEnrollment(data: EnrollmentFormData) {
     )}`;
 
     // Create the enrollment in a transaction to ensure both enrollment and fee are created
-    const result = await db.$transaction(async (tx) => {
+    await db.$transaction(async (tx) => {
       // Create the enrollment
       const enrollment = await tx.enrollment.create({
         data: {
@@ -46,7 +46,7 @@ export async function createEnrollment(data: EnrollmentFormData) {
       });
 
       // Create the fee associated with this enrollment
-      const fee = await tx.fee.create({
+      await tx.fee.create({
         data: {
           enrollmentId: enrollment.id,
           institutionId: validatedData.institutionId,
@@ -59,10 +59,10 @@ export async function createEnrollment(data: EnrollmentFormData) {
         },
       });
 
-      return { enrollment, fee };
+      return;
     });
 
-    return { success: true, data: result };
+    return { success: true };
   } catch (error) {
     console.error("Error creating enrollment:", error);
     if (error instanceof z.ZodError) {

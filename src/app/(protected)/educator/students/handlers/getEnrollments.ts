@@ -8,9 +8,6 @@ export async function getEnrollments(institutionId: string) {
       where: {
         institutionId: institutionId,
       },
-      include: {
-        fees: true,
-      },
       orderBy: {
         createdAt: "desc",
       },
