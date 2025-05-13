@@ -18,11 +18,11 @@ import { OrderEntity } from "cashfree-pg";
 import { useRouter } from "next/navigation";
 import cashfree from "@/lib/cfpg_client";
 import { CreateOrderDto } from "@/app/api/pg/create-order/route";
-import { Enrollment, PaymentSession } from "@/generated/prisma";
+import { Enrollment, PaymentSchedule } from "@/generated/prisma";
 
 interface ApiResponse {
-  enrollment?: Enrollment & { fees: PaymentSession[] };
-  latestUnpaidFee?: PaymentSession | null;
+  enrollment?: Enrollment & { fees: PaymentSchedule[] };
+  latestUnpaidFee?: PaymentSchedule | null;
   error?: string;
 }
 
@@ -110,11 +110,11 @@ const Page = () => {
   };
 
   const doPayment = async (
-    paymentSessionId: string,
+    paymentScheduleId: string,
     currentOrderId: string
   ) => {
     let checkoutOptions = {
-      paymentSessionId: paymentSessionId,
+      paymentScheduleId: paymentScheduleId,
       redirectTarget: "_top",
     };
     cashfree.checkout(checkoutOptions).then((result: PGResponse) => {

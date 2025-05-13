@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       include: {
         fees: {
           include: {
-            paymentSessions: {
+            paymentSchedules: {
               where: {
                 isPaid: false,
               },
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     // Get the latest unpaid fee session
     const unpaidFees = enrollment.fees
-      .flatMap((fee) => fee.paymentSessions)
+      .flatMap((fee) => fee.paymentSchedules)
       .sort(
         (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
       );
