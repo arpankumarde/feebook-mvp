@@ -17,10 +17,12 @@ import { format } from "date-fns";
 import { OrderEntity } from "cashfree-pg";
 import { useRouter } from "next/navigation";
 import cashfree from "@/lib/cfpg_client";
+import { CreateOrderDto } from "@/app/api/pg/create-order/route";
+import { Enrollment, PaymentSession } from "@/generated/prisma";
 
 interface ApiResponse {
-  success: boolean;
-  data?: any;
+  enrollment?: Enrollment & { fees: PaymentSession[] };
+  latestUnpaidFee?: PaymentSession | null;
   error?: string;
 }
 
@@ -37,7 +39,7 @@ const Page = () => {
 
   const [enrollmentId, setEnrollmentId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [enrollmentData, setEnrollmentData] = useState<any>(null);
+  const [enrollmentData, setEnrollmentData] = useState<ApiResponse>();
   const [error, setError] = useState<string | null>(null);
 
   const handleFetchEnrollment = async () => {
@@ -50,26 +52,28 @@ const Page = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await axios.get<ApiResponse>(`/pay/api`, {
-        params: { enrollmentId },
-      });
-      const result = response.data;
+      const { data } = await axios.get<ApiResponse>(
+        `/api/enrollment/find-unpaid`,
+        {
+          params: { enrollmentId },
+        }
+      );
 
-      if (result.success) {
-        setEnrollmentData(result.data);
+      if (data.enrollment) {
+        setEnrollmentData(data);
+        console.log("Enrollment Data:", data);
       } else {
-        setError(result.error || "Failed to fetch enrollment details");
-        toast.error(result.error || "Failed to fetch enrollment details");
+        setError(data.error || "Failed to fetch enrollment details");
+        toast.error(data.error || "Failed to fetch enrollment details");
       }
     } catch (error) {
       if (error instanceof AxiosError) {
-        if (error.response?.data?.error) {
-          setError(error.response.data.error);
-          toast.error(error.response.data.error);
-        } else {
-          setError("Failed to fetch enrollment details");
-          toast.error("Failed to fetch enrollment details");
-        }
+        setError(
+          error.response?.data?.error || "Failed to fetch enrollment details"
+        );
+        toast.error(
+          error.response?.data?.error || "Failed to fetch enrollment details"
+        );
       } else {
         setError("An unexpected error occurred");
         toast.error("An unexpected error occurred");
@@ -78,6 +82,31 @@ const Page = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePayment = () => {
+    const createOrderRequestBody: CreateOrderDto = {
+      enrollmentId: enrollmentData?.enrollment?.enrollmentId ?? "",
+      orderAmount: Number(enrollmentData?.latestUnpaidFee?.dueAmount) ?? 1.0,
+      customerName: enrollmentData?.enrollment?.studentName ?? "",
+      customerPhone: enrollmentData?.enrollment?.studentPhone ?? "",
+      customerEmail: enrollmentData?.enrollment?.studentEmail ?? "",
+      paymentScheduleId: enrollmentData?.latestUnpaidFee?.id ?? "",
+    };
+
+    axios
+      .post<OrderEntity>("/api/pg/create-order", createOrderRequestBody)
+      .then((response) => {
+        console.log("Order Created successfully:", response.data);
+        if (response.data.payment_session_id && response.data.order_id) {
+          toast.success("Order created successfully");
+          doPayment(response.data.payment_session_id, response.data.order_id);
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error.response.data.error);
+        toast.error(error.response.data.error);
+      });
   };
 
   const doPayment = async (
@@ -111,26 +140,6 @@ const Page = () => {
         router.push(`/pay/verify?orderId=${currentOrderId}`);
       }
     });
-  };
-
-  const handlePayment = () => {
-    axios
-      .post<OrderEntity>("/pay/api/create-order", {
-        orderId: enrollmentData.latestUnpaidFee.sessionId,
-        orderAmount: enrollmentData.latestUnpaidFee.dueAmount,
-        customerPhone: enrollmentData.enrollment.studentPhone,
-      })
-      .then((response) => {
-        console.log("Order Created successfully:", response.data);
-        if (response.data.payment_session_id && response.data.order_id) {
-          toast.success("Order created successfully");
-          doPayment(response.data.payment_session_id, response.data.order_id);
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error.response.data.error);
-        toast.error(error.response.data.error);
-      });
   };
 
   return (
@@ -172,22 +181,22 @@ const Page = () => {
                 <div className="mt-2 space-y-1 text-sm">
                   <p>
                     <span className="font-medium">Name:</span>{" "}
-                    {enrollmentData.enrollment.studentName}
+                    {enrollmentData?.enrollment?.studentName}
                   </p>
                   <p>
                     <span className="font-medium">Enrollment ID:</span>{" "}
-                    {enrollmentData.enrollment.enrollmentId}
+                    {enrollmentData?.enrollment?.enrollmentId}
                   </p>
-                  {enrollmentData.enrollment.studentEmail && (
+                  {enrollmentData?.enrollment?.studentEmail && (
                     <p>
                       <span className="font-medium">Email:</span>{" "}
-                      {enrollmentData.enrollment.studentEmail}
+                      {enrollmentData?.enrollment?.studentEmail}
                     </p>
                   )}
-                  {enrollmentData.enrollment.studentPhone && (
+                  {enrollmentData?.enrollment?.studentPhone && (
                     <p>
                       <span className="font-medium">Phone:</span>{" "}
-                      {enrollmentData.enrollment.studentPhone}
+                      {enrollmentData?.enrollment?.studentPhone}
                     </p>
                   )}
                 </div>
@@ -197,10 +206,6 @@ const Page = () => {
                 <div className="rounded-lg bg-blue-50 p-4">
                   <h3 className="font-medium">Latest Unpaid Fee</h3>
                   <div className="mt-2 space-y-1 text-sm">
-                    <p>
-                      <span className="font-medium">Fee Title:</span>{" "}
-                      {enrollmentData.latestUnpaidFee.feeTitle}
-                    </p>
                     <p>
                       <span className="font-medium">Month:</span>{" "}
                       {format(
@@ -236,7 +241,7 @@ const Page = () => {
                 variant="outline"
                 className="w-full"
                 onClick={() => {
-                  setEnrollmentData(null);
+                  setEnrollmentData({});
                   setError(null);
                 }}
               >

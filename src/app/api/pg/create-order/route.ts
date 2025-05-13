@@ -3,17 +3,27 @@ import db from "@/lib/db";
 import cashfree from "@/lib/cfpg_server";
 import { CreateOrderRequest } from "cashfree-pg";
 
+export interface CreateOrderDto {
+  enrollmentId: string;
+  orderAmount: number;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  paymentScheduleId: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // const body = await request.json();
+    const body = (await request.json()) as CreateOrderDto;
 
     let orderRequestBody: CreateOrderRequest = {
-      order_amount: 1,
+      order_amount: body.orderAmount,
       order_currency: "INR",
       customer_details: {
-        customer_id: "walterwNrcMi",
-        customer_phone: "9999999999",
-        customer_email: "walter@example.com",
+        customer_id: body.enrollmentId,
+        customer_name: body.customerName,
+        customer_phone: body.customerPhone,
+        customer_email: body.customerEmail,
       },
       order_meta: {
         return_url: "http://localhost:3000/pay/verify?orderId={order_id}",
@@ -21,7 +31,8 @@ export async function POST(request: NextRequest) {
       },
       order_note: "Sample Order Note",
       order_tags: {
-        name: "Developer",
+        enrollmentId: body.enrollmentId,
+        paymentScheduleId: body.paymentScheduleId,
       },
     };
 

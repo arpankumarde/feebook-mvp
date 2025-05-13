@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 
 export async function GET(request: NextRequest) {
-  // Get the enrollmentId from the URL search params
   const searchParams = request.nextUrl.searchParams;
   const enrollmentId = searchParams.get("enrollmentId");
 
@@ -44,16 +43,7 @@ export async function GET(request: NextRequest) {
 
     // Get the latest unpaid fee session
     const unpaidFees = enrollment.fees
-      .flatMap((fee) =>
-        fee.paymentSessions.map((session) => ({
-          feeId: fee.id,
-          feeTitle: fee.title,
-          sessionId: session.id,
-          month: session.month,
-          dueAmount: session.dueAmount,
-          dueDate: session.dueDate,
-        }))
-      )
+      .flatMap((fee) => fee.paymentSessions)
       .sort(
         (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
       );
@@ -61,16 +51,13 @@ export async function GET(request: NextRequest) {
     const latestUnpaidFee = unpaidFees.length > 0 ? unpaidFees[0] : null;
 
     return NextResponse.json({
-      success: true,
-      data: {
-        enrollment,
-        latestUnpaidFee,
-      },
+      enrollment,
+      latestUnpaidFee,
     });
   } catch (error) {
     console.error("Error fetching enrollment:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to fetch enrollment details" },
+      { error: "Failed to fetch enrollment details" },
       { status: 500 }
     );
   }
