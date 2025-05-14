@@ -95,6 +95,7 @@ model PaymentSchedule {
   feeId              String
   payments           Payment[]
   fee                Fee       @relation(fields: [feeId], references: [id], onDelete: Cascade)
+  orders             Order[]
 
   @@unique([feeId, month])
 }
@@ -117,6 +118,7 @@ model Payment {
   payerPhone        String?
   remarks           String?
   paymentScheduleId String?
+  paymentSessionId  String?
   invoice           Invoice?
   enrollment        Enrollment       @relation(fields: [enrollmentId], references: [id])
   fee               Fee?             @relation(fields: [feeId], references: [id])
@@ -171,6 +173,24 @@ model WithdrawalRequest {
   institution   Institution      @relation(fields: [institutionId], references: [id])
 }
 
+model Order {
+  id                String          @id @default(uuid())
+  paymentScheduleId String
+  cfOrderId         String          @unique
+  orderId           String          @unique
+  amount            Decimal         @db.Decimal(10, 2)
+  currency          String          @default("INR")
+  status            OrderStatus     @default(ACTIVE)
+  customer          Json?
+  orderMeta         Json?
+  orderTags         Json?
+  expiryTime        DateTime?
+  orderNote         String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  paymentSchedule   PaymentSchedule @relation(fields: [paymentScheduleId], references: [id])
+}
+
 enum UserRole {
   ADMIN
   INSTITUTION
@@ -181,6 +201,14 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   REFUNDED
+}
+
+enum OrderStatus {
+  ACTIVE
+  PAID
+  EXPIRED
+  TERMINATED
+  TERMINATION_REQUESTED
 }
 
 enum PaymentMethod {

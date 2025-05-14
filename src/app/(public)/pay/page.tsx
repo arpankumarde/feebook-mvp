@@ -110,12 +110,13 @@ const Page = () => {
   };
 
   const doPayment = async (
-    paymentScheduleId: string,
+    paymentSessionId: string,
     currentOrderId: string
   ) => {
     let checkoutOptions = {
-      paymentScheduleId: paymentScheduleId,
-      redirectTarget: "_top",
+      paymentSessionId: paymentSessionId,
+      // redirectTarget: "_top",
+      redirectTarget: "_modal",
     };
     cashfree.checkout(checkoutOptions).then((result: PGResponse) => {
       console.log("Payment Result", result);
