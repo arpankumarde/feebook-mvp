@@ -19,6 +19,9 @@ model User {
   updatedAt   DateTime     @updatedAt
   admin       Admin?
   institution Institution?
+
+  @@index([email, role])
+  @@index([name])
 }
 
 model Admin {
@@ -30,22 +33,22 @@ model Admin {
 }
 
 model Institution {
-  id          String              @id @default(uuid())
-  userId      String              @unique
-  name        String
-  address     String?
-  city        String?
-  state       String?
-  pincode     String?
-  isVerified  Boolean             @default(false)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  enrollments Enrollment[]
-  fees        Fee[]
-  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  payments    Payment[]
-  wallet      Wallet?
-  withdrawals WithdrawalRequest[]
+  id                String             @id @default(uuid())
+  userId            String             @unique
+  name              String
+  address           String?
+  city              String?
+  state             String?
+  pincode           String?
+  isVerified        Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  enrollments       Enrollment[]
+  fees              Fee[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments          Payment[]
+  financialAccount  FinancialAccount?
+  financialRequests FinancialRequest[]
 }
 
 model Enrollment {
@@ -63,6 +66,7 @@ model Enrollment {
   payments      Payment[]
 
   @@index([enrollmentId])
+  @@index([institutionId])
 }
 
 model Fee {
@@ -78,9 +82,11 @@ model Fee {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   enrollment       Enrollment        @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  institution      Institution       @relation(fields: [institutionId], references: [id])
-  payments         Payment[]
+  institution      Institution       @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   paymentSchedules PaymentSchedule[]
+
+  @@index([enrollmentId, institutionId])
+  @@index([startDate, endDate])
 }
 
 model PaymentSchedule {
@@ -93,84 +99,11 @@ model PaymentSchedule {
   dueDate            DateTime
   paidDate           DateTime?
   feeId              String
-  payments           Payment[]
   fee                Fee       @relation(fields: [feeId], references: [id], onDelete: Cascade)
   orders             Order[]
+  Invoice            Invoice?
 
   @@unique([feeId, month])
-}
-
-model Payment {
-  id                String           @id @default(uuid())
-  amount            Decimal          @db.Decimal(10, 2)
-  method            PaymentMethod
-  status            PaymentStatus    @default(PENDING)
-  transactionId     String?
-  paymentDate       DateTime         @default(now())
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  institutionId     String
-  GatewayResponse   Json?
-  enrollmentId      String
-  feeId             String?
-  payerEmail        String?
-  payerName         String?
-  payerPhone        String?
-  remarks           String?
-  paymentScheduleId String?
-  paymentSessionId  String?
-  invoice           Invoice?
-  enrollment        Enrollment       @relation(fields: [enrollmentId], references: [id])
-  fee               Fee?             @relation(fields: [feeId], references: [id])
-  institution       Institution      @relation(fields: [institutionId], references: [id])
-  paymentSchedule   PaymentSchedule? @relation(fields: [paymentScheduleId], references: [id])
-}
-
-model Invoice {
-  id            String   @id @default(uuid())
-  paymentId     String   @unique
-  invoiceNumber String   @unique
-  generatedDate DateTime @default(now())
-  pdfUrl        String?
-  payment       Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-}
-
-model Wallet {
-  id            String        @id @default(uuid())
-  institutionId String        @unique
-  balance       Decimal       @default(0) @db.Decimal(10, 2)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @default(now())
-  transactions  Transaction[]
-  institution   Institution   @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-}
-
-model Transaction {
-  id          String   @id @default(uuid())
-  walletId    String
-  amount      Decimal  @db.Decimal(10, 2)
-  type        String
-  description String?
-  refId       String?
-  createdAt   DateTime @default(now())
-  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
-}
-
-model WithdrawalRequest {
-  id            String           @id @default(uuid())
-  institutionId String
-  amount        Decimal          @db.Decimal(10, 2)
-  status        WithdrawalStatus @default(PENDING)
-  accountNumber String?
-  ifsc          String?
-  bankName      String?
-  accountName   String?
-  accountType   AccountType      @default(SAVINGS)
-  remarks       String?
-  requestedAt   DateTime         @default(now())
-  processedAt   DateTime?
-  updatedAt     DateTime         @updatedAt
-  institution   Institution      @relation(fields: [institutionId], references: [id])
 }
 
 model Order {
@@ -189,18 +122,109 @@ model Order {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   paymentSchedule   PaymentSchedule @relation(fields: [paymentScheduleId], references: [id])
+  Payment           Payment?
+
+  @@index([paymentScheduleId])
+}
+
+model Payment {
+  id                    String                @id @default(uuid())
+  orderId               String                @unique
+  cfPaymentId           String                @unique
+  paymentStatus         PaymentStates
+  paymentAmount         Decimal               @db.Decimal(10, 2)
+  paymentCurrency       String
+  paymentMessage        String
+  paymentTime           DateTime
+  bankReference         String
+  paymentMethod         Json
+  paymentGroup          String
+  paymentGatewayDetails Json
+  paymentOffers         Json[]                @default([])
+  errorDetails          Json?
+  terminalDetails       Json?
+  webhookResponse       Json
+  webhookAttempt        Int                   @default(0)
+  webhookSignature      String
+  webhookTimestamp      DateTime
+  webhookVersion        String
+  IdempotencyKey        String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  institutionId         String?
+  enrollmentId          String?
+  order                 Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  Institution           Institution?          @relation(fields: [institutionId], references: [id])
+  Enrollment            Enrollment?           @relation(fields: [enrollmentId], references: [id])
+  settlement            FinancialTransaction?
+
+  @@index([paymentStatus])
+  @@index([institutionId, enrollmentId])
+}
+
+model Invoice {
+  id                String          @id @default(uuid())
+  paymentScheduleId String          @unique
+  invoiceNumber     String          @unique
+  generatedDate     DateTime        @default(now())
+  pdfUrl            String?
+  paymentSchedule   PaymentSchedule @relation(fields: [paymentScheduleId], references: [id], onDelete: Cascade)
+}
+
+model FinancialAccount {
+  id            String                 @id @default(uuid())
+  institutionId String                 @unique
+  balance       Decimal                @default(0) @db.Decimal(10, 2)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @default(now()) @updatedAt
+  institution   Institution            @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  transactions  FinancialTransaction[]
+}
+
+model FinancialTransaction {
+  id          String            @id @default(uuid())
+  accountId   String
+  amount      Decimal           @db.Decimal(10, 2)
+  type        TransactionType
+  status      TransactionStatus @default(PENDING)
+  description String?
+  reference   String?
+  paymentId   String?           @unique
+  payment     Payment?          @relation(fields: [paymentId], references: [id])
+  requestId   String?           @unique
+  request     FinancialRequest? @relation(fields: [requestId], references: [id])
+  processedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  account     FinancialAccount  @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
+  @@index([type])
+}
+
+model FinancialRequest {
+  id             String                @id @default(uuid())
+  institutionId  String
+  amount         Decimal               @db.Decimal(10, 2)
+  type           FinancialRequestType
+  status         RequestStatus         @default(PENDING)
+  accountDetails Json?
+  remarks        String?
+  requestedAt    DateTime              @default(now())
+  processedAt    DateTime?
+  updatedAt      DateTime              @updatedAt
+  institution    Institution           @relation(fields: [institutionId], references: [id])
+  transaction    FinancialTransaction?
+
+  @@index([institutionId])
+  @@index([status])
+  @@index([type])
+  @@index([requestedAt])
 }
 
 enum UserRole {
   ADMIN
   INSTITUTION
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
 }
 
 enum OrderStatus {
@@ -211,16 +235,54 @@ enum OrderStatus {
   TERMINATION_REQUESTED
 }
 
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentStates {
+  FAILED
+  NOT_ATTEMPTED
+  PENDING
+  FLAGGED
+  CANCELLED
+  VOID
+  USER_DROPPED
+}
+
 enum PaymentMethod {
   ONLINE
   OFFLINE
 }
 
-enum WithdrawalStatus {
+enum TransactionType {
+  PAYMENT_SETTLEMENT
+  WITHDRAWAL
+  REFUND
+  ADJUSTMENT
+  FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum FinancialRequestType {
+  WITHDRAWAL
+  REFUND
+  ADJUSTMENT
+}
+
+enum RequestStatus {
   PENDING
   APPROVED
   REJECTED
   COMPLETED
+  CANCELLED
 }
 
 enum AccountType {
