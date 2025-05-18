@@ -1,291 +1,266 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+    provider = "prisma-client-js"
+    output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
-model User {
-  id          String       @id @default(uuid())
-  email       String       @unique
-  phone       Int          @unique
-  password    String
-  name        String
-  role        UserRole
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  admin       Admin?
-  institution Institution?
+// Provider model (Organizations/Individuals who collect fees)
+model Provider {
+    id            String           @id @default(uuid())
+    createdAt     DateTime         @default(now())
+    updatedAt     DateTime         @updatedAt
+    name          String
+    type          AccountType
+    category      AccountCategory?
+    status        AccountStatus    @default(PENDING)
+    code          String           @unique // Identifier for consumers to find the provider
+    adminName     String
+    email         String           @unique
+    phone         String
+    password      String
+    isVerified    Boolean          @default(false)
+    walletBalance Decimal          @default(0) @db.Decimal(10, 2)
 
-  @@index([email, role])
-  @@index([name])
+    // Relations
+    verification       ProviderVerification?
+    bankAccounts       BankAccount[]
+    members            Member[]
+    feePlans           FeePlan[]
+    walletTransactions WalletTransaction[]
 }
 
+// Verification information for providers
+model ProviderVerification {
+    id               String             @id @default(uuid())
+    providerId       String             @unique
+    status           VerificationStatus @default(PENDING)
+    panNumber        String
+    panDocument      String // Document URL
+    legalName        String
+    gstin            String?
+    gstDocument      String? // Document URL
+    approvedAt       DateTime?
+    rejectionReason  String?
+    verifierResponse Json?
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime           @updatedAt
+    provider         Provider           @relation(fields: [providerId], references: [id])
+}
+
+// Administrator model
 model Admin {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id        String   @id @default(uuid())
+    email     String   @unique
+    password  String
+    name      String
+    isActive  Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
-model Institution {
-  id                String             @id @default(uuid())
-  userId            String             @unique
-  name              String
-  address           String?
-  city              String?
-  state             String?
-  pincode           String?
-  isVerified        Boolean            @default(false)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  enrollments       Enrollment[]
-  fees              Fee[]
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  payments          Payment[]
-  financialAccount  FinancialAccount?
-  financialRequests FinancialRequest[]
+// Bank account details for providers
+model BankAccount {
+    id                 String              @id @default(uuid())
+    providerId         String
+    accountNumber      String
+    ifsc               String
+    accountName        String
+    bankName           String
+    verifierResponse   Json?
+    verificationStatus VerificationStatus  @default(PENDING)
+    isDefault          Boolean             @default(false)
+    createdAt          DateTime            @default(now())
+    updatedAt          DateTime            @updatedAt
+    provider           Provider            @relation(fields: [providerId], references: [id])
+    withdrawalRequests WithdrawalRequest[]
 }
 
-model Enrollment {
-  id            String      @id @default(uuid())
-  institutionId String
-  studentName   String
-  studentEmail  String?
-  studentPhone  String?
-  enrollmentId  String      @unique
-  joinDate      DateTime    @default(now())
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  fees          Fee[]
-  payments      Payment[]
-
-  @@index([enrollmentId])
-  @@index([institutionId])
+// Consumer model (End users who pay fees)
+model Consumer {
+    id              String        @id @default(uuid())
+    email           String?       @unique
+    phone           String        @unique
+    password        String
+    firstName       String?
+    lastName        String?
+    isPhoneVerified Boolean       @default(false)
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
+    memberships     Member[]
+    transactions    Transaction[]
 }
 
-model Fee {
-  id               String            @id @default(uuid())
-  enrollmentId     String
-  institutionId    String
-  title            String
-  totalAmount      Decimal           @db.Decimal(10, 2)
-  monthlyAmount    Decimal           @db.Decimal(10, 2)
-  startDate        DateTime
-  endDate          DateTime
-  paidAmount       Decimal           @default(0) @db.Decimal(10, 2)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  enrollment       Enrollment        @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  institution      Institution       @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  paymentSchedules PaymentSchedule[]
+// Member model (Links consumers to providers)
+model Member {
+    id           String    @id @default(uuid())
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+    uniqueId     String    @default(uuid())
+    firstName    String
+    middleName   String?
+    lastName     String
+    dateOfBirth  DateTime?
+    gender       String?
+    phone        String
+    email        String?
+    category     String?
+    subcategory  String?
+    guardianName String?
+    relationship String?
+    consumerId   String?
+    providerId   String
+    consumer     Consumer? @relation(fields: [consumerId], references: [id])
+    provider     Provider  @relation(fields: [providerId], references: [id])
+    FeePlan      FeePlan[]
 
-  @@index([enrollmentId, institutionId])
-  @@index([startDate, endDate])
+    @@unique([providerId, uniqueId])
 }
 
-model PaymentSchedule {
-  id                 String    @id @default(uuid())
-  month              DateTime
-  isPaid             Boolean   @default(false)
-  manuallyMarkedPaid Boolean   @default(false)
-  dueAmount          Decimal   @db.Decimal(10, 2)
-  paidAmount         Decimal   @default(0) @db.Decimal(10, 2)
-  dueDate            DateTime
-  paidDate           DateTime?
-  feeId              String
-  fee                Fee       @relation(fields: [feeId], references: [id], onDelete: Cascade)
-  orders             Order[]
-  Invoice            Invoice?
-
-  @@unique([feeId, month])
+// Fee plan model (Fee structure created by providers)
+model FeePlan {
+    id           String        @id @default(uuid())
+    providerId   String
+    memberId     String
+    name         String
+    description  String?
+    amount       Decimal       @db.Decimal(10, 2)
+    status       String
+    dueDate      DateTime
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
+    provider     Provider      @relation(fields: [providerId], references: [id])
+    member       Member        @relation(fields: [memberId], references: [id])
+    transactions Transaction[]
+    orders       Order[]
 }
 
+// Order model for payments
 model Order {
-  id                String          @id @default(uuid())
-  paymentScheduleId String
-  cfOrderId         String          @unique
-  orderId           String          @unique
-  amount            Decimal         @db.Decimal(10, 2)
-  currency          String          @default("INR")
-  status            OrderStatus     @default(ACTIVE)
-  customer          Json?
-  orderMeta         Json?
-  orderTags         Json?
-  expiryTime        DateTime?
-  orderNote         String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  paymentSchedule   PaymentSchedule @relation(fields: [paymentScheduleId], references: [id])
-  Payment           Payment?
+    id               String        @id @default(uuid())
+    feePlanId        String
+    externalOrderId  String        @unique
+    amount           Decimal       @db.Decimal(10, 2)
+    currency         String        @default("INR")
+    status           OrderStatus   @default(ACTIVE)
+    customer         Json?
+    orderMeta        Json?
+    orderTags        Json?
+    note             String?
+    expiryTime       DateTime?
+    paymentSessionId String?
+    createdAt        DateTime      @default(now())
+    updatedAt        DateTime      @updatedAt
+    feePlan          FeePlan       @relation(fields: [feePlanId], references: [id])
+    transactions     Transaction[]
 
-  @@index([paymentScheduleId])
+    @@index([feePlanId])
 }
 
-model Payment {
-  id                    String                @id @default(uuid())
-  orderId               String                @unique
-  cfPaymentId           String                @unique
-  paymentStatus         PaymentStates
-  paymentAmount         Decimal               @db.Decimal(10, 2)
-  paymentCurrency       String
-  paymentMessage        String
-  paymentTime           DateTime
-  bankReference         String
-  paymentMethod         Json
-  paymentGroup          String
-  paymentGatewayDetails Json
-  paymentOffers         Json[]                @default([])
-  errorDetails          Json?
-  terminalDetails       Json?
-  webhookResponse       Json
-  webhookAttempt        Int                   @default(0)
-  webhookSignature      String
-  webhookTimestamp      DateTime
-  webhookVersion        String
-  IdempotencyKey        String?
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
-  institutionId         String?
-  enrollmentId          String?
-  order                 Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  Institution           Institution?          @relation(fields: [institutionId], references: [id])
-  Enrollment            Enrollment?           @relation(fields: [enrollmentId], references: [id])
-  settlement            FinancialTransaction?
+// Transaction model for payment attempts
+model Transaction {
+    id                    String        @id @default(uuid())
+    orderId               String
+    consumerId            String
+    feePlanId             String?
+    externalPaymentId     String?       @unique
+    amount                Decimal       @db.Decimal(10, 2)
+    status                PaymentStatus
+    paymentTime           DateTime?
+    paymentCurrency       String
+    paymentMessage        String?
+    bankReference         String?
+    paymentMethod         Json?
+    paymentGroup          String?
+    paymentSurcharge      Json?
+    paymentGatewayDetails Json?
+    paymentOffers         Json[]        @default([])
+    errorDetails          Json?
+    terminalDetails       Json?
+    webhookResponse       Json
+    webhookAttempt        Int           @default(0)
+    webhookSignature      String
+    webhookTimestamp      DateTime
+    webhookVersion        String
+    IdempotencyKey        String?
+    createdAt             DateTime      @default(now())
+    updatedAt             DateTime      @updatedAt
+    consumer              Consumer      @relation(fields: [consumerId], references: [id])
+    order                 Order         @relation(fields: [orderId], references: [id])
+    FeePlan               FeePlan?      @relation(fields: [feePlanId], references: [id])
 
-  @@index([paymentStatus])
-  @@index([institutionId, enrollmentId])
+    @@index([orderId])
+    @@index([consumerId])
+    @@index([feePlanId])
 }
 
-model Invoice {
-  id                String          @id @default(uuid())
-  paymentScheduleId String          @unique
-  invoiceNumber     String          @unique
-  generatedDate     DateTime        @default(now())
-  pdfUrl            String?
-  paymentSchedule   PaymentSchedule @relation(fields: [paymentScheduleId], references: [id], onDelete: Cascade)
+// Provider wallet transactions
+model WalletTransaction {
+    id          String   @id @default(uuid())
+    providerId  String
+    amount      Decimal  @db.Decimal(10, 2)
+    type        String
+    status      String
+    description String?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    provider    Provider @relation(fields: [providerId], references: [id])
 }
 
-model FinancialAccount {
-  id            String                 @id @default(uuid())
-  institutionId String                 @unique
-  balance       Decimal                @default(0) @db.Decimal(10, 2)
-  createdAt     DateTime               @default(now())
-  updatedAt     DateTime               @default(now()) @updatedAt
-  institution   Institution            @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  transactions  FinancialTransaction[]
-}
-
-model FinancialTransaction {
-  id          String            @id @default(uuid())
-  accountId   String
-  amount      Decimal           @db.Decimal(10, 2)
-  type        TransactionType
-  status      TransactionStatus @default(PENDING)
-  description String?
-  reference   String?
-  paymentId   String?           @unique
-  payment     Payment?          @relation(fields: [paymentId], references: [id])
-  requestId   String?           @unique
-  request     FinancialRequest? @relation(fields: [requestId], references: [id])
-  processedAt DateTime?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  account     FinancialAccount  @relation(fields: [accountId], references: [id])
-
-  @@index([accountId])
-  @@index([type])
-}
-
-model FinancialRequest {
-  id             String                @id @default(uuid())
-  institutionId  String
-  amount         Decimal               @db.Decimal(10, 2)
-  type           FinancialRequestType
-  status         RequestStatus         @default(PENDING)
-  accountDetails Json?
-  remarks        String?
-  requestedAt    DateTime              @default(now())
-  processedAt    DateTime?
-  updatedAt      DateTime              @updatedAt
-  institution    Institution           @relation(fields: [institutionId], references: [id])
-  transaction    FinancialTransaction?
-
-  @@index([institutionId])
-  @@index([status])
-  @@index([type])
-  @@index([requestedAt])
-}
-
-enum UserRole {
-  ADMIN
-  INSTITUTION
-}
-
-enum OrderStatus {
-  ACTIVE
-  PAID
-  EXPIRED
-  TERMINATED
-  TERMINATION_REQUESTED
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
-}
-
-enum PaymentStates {
-  FAILED
-  NOT_ATTEMPTED
-  PENDING
-  FLAGGED
-  CANCELLED
-  VOID
-  USER_DROPPED
-}
-
-enum PaymentMethod {
-  ONLINE
-  OFFLINE
-}
-
-enum TransactionType {
-  PAYMENT_SETTLEMENT
-  WITHDRAWAL
-  REFUND
-  ADJUSTMENT
-  FEE
-}
-
-enum TransactionStatus {
-  PENDING
-  COMPLETED
-  FAILED
-}
-
-enum FinancialRequestType {
-  WITHDRAWAL
-  REFUND
-  ADJUSTMENT
-}
-
-enum RequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  COMPLETED
-  CANCELLED
+// Withdrawal requests from providers
+model WithdrawalRequest {
+    id            String      @id @default(uuid())
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime    @updatedAt
+    amount        Decimal     @db.Decimal(10, 2)
+    status        String
+    bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id])
+    bankAccountId String
 }
 
 enum AccountType {
-  SAVINGS
-  CURRENT
+    INDIVIDUAL
+    ORGANIZATION
+}
+
+enum AccountCategory {
+    EDUCATIONAL
+    HIGHER_EDUCATION
+    COACHING
+    FITNESS_SPORTS
+    OTHER
+}
+
+enum AccountStatus {
+    PENDING
+    APPROVED
+    REJECTED
+    SUSPENDED
+}
+
+enum VerificationStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+enum OrderStatus {
+    ACTIVE
+    PAID
+    EXPIRED
+    TERMINATED
+    TERMINATION_REQUESTED
+}
+
+enum PaymentStatus {
+    FAILED
+    NOT_ATTEMPTED
+    PENDING
+    FLAGGED
+    CANCELLED
+    VOID
+    USER_DROPPED
 }
