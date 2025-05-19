@@ -10,22 +10,20 @@ datasource db {
 
 // Provider model (Organizations/Individuals who collect fees)
 model Provider {
-    id            String           @id @default(uuid())
-    createdAt     DateTime         @default(now())
-    updatedAt     DateTime         @updatedAt
-    name          String
-    type          AccountType
-    category      AccountCategory?
-    status        AccountStatus    @default(PENDING)
-    code          String           @unique // Identifier for consumers to find the provider
-    adminName     String
-    email         String           @unique
-    phone         String
-    password      String
-    isVerified    Boolean          @default(false)
-    walletBalance Decimal          @default(0) @db.Decimal(10, 2)
-
-    // Relations
+    id                 String                @id @default(uuid())
+    name               String
+    type               AccountType
+    category           AccountCategory       @default(OTHER)
+    status             AccountStatus         @default(PENDING)
+    code               String                @unique // Identifier for consumers to find the provider
+    adminName          String
+    email              String                @unique
+    phone              String                @unique @db.VarChar(10)
+    password           String
+    isVerified         Boolean               @default(false)
+    walletBalance      Decimal               @default(0) @db.Decimal(10, 2)
+    createdAt          DateTime              @default(now())
+    updatedAt          DateTime              @updatedAt
     verification       ProviderVerification?
     bankAccounts       BankAccount[]
     members            Member[]
@@ -38,14 +36,23 @@ model ProviderVerification {
     id               String             @id @default(uuid())
     providerId       String             @unique
     status           VerificationStatus @default(PENDING)
-    panNumber        String
+    panNumber        String             @db.VarChar(10)
     panDocument      String // Document URL
+    panBizNumber     String?
+    panBizDocument   String?
+    aadhaarNumber    String?            @db.VarChar(12)
+    aadhaarDocument  String? // Document URL
     legalName        String
+    legalBizName     String?
+    dob              DateTime           @db.Date
+    address          String
+    cinNumber        String?
+    llpinNumber      String?
     gstin            String?
     gstDocument      String? // Document URL
-    approvedAt       DateTime?
     rejectionReason  String?
-    verifierResponse Json?
+    verifierResponse Json[]             @default([])
+    approvedAt       DateTime?
     createdAt        DateTime           @default(now())
     updatedAt        DateTime           @updatedAt
     provider         Provider           @relation(fields: [providerId], references: [id])
@@ -83,7 +90,7 @@ model BankAccount {
 model Consumer {
     id              String        @id @default(uuid())
     email           String?       @unique
-    phone           String        @unique
+    phone           String        @unique @db.VarChar(10)
     password        String
     firstName       String?
     lastName        String?
@@ -105,7 +112,7 @@ model Member {
     lastName     String
     dateOfBirth  DateTime?
     gender       String?
-    phone        String
+    phone        String    @unique @db.VarChar(10)
     email        String?
     category     String?
     subcategory  String?
@@ -122,20 +129,22 @@ model Member {
 
 // Fee plan model (Fee structure created by providers)
 model FeePlan {
-    id           String        @id @default(uuid())
-    providerId   String
-    memberId     String
-    name         String
-    description  String?
-    amount       Decimal       @db.Decimal(10, 2)
-    status       String
-    dueDate      DateTime
-    createdAt    DateTime      @default(now())
-    updatedAt    DateTime      @updatedAt
-    provider     Provider      @relation(fields: [providerId], references: [id])
-    member       Member        @relation(fields: [memberId], references: [id])
-    transactions Transaction[]
-    orders       Order[]
+    id                 String        @id @default(uuid())
+    providerId         String
+    memberId           String
+    name               String
+    description        String?
+    amount             Decimal       @db.Decimal(10, 2)
+    status             FeePlanStatus @default(DUE)
+    dueDate            DateTime
+    isOfflinePaid      Boolean       @default(false)
+    consumerClaimsPaid Boolean       @default(false)
+    createdAt          DateTime      @default(now())
+    updatedAt          DateTime      @updatedAt
+    provider           Provider      @relation(fields: [providerId], references: [id])
+    member             Member        @relation(fields: [memberId], references: [id])
+    transactions       Transaction[]
+    orders             Order[]
 }
 
 // Order model for payments
@@ -164,7 +173,7 @@ model Order {
 model Transaction {
     id                    String        @id @default(uuid())
     orderId               String
-    consumerId            String
+    consumerId            String?
     feePlanId             String?
     externalPaymentId     String?       @unique
     amount                Decimal       @db.Decimal(10, 2)
@@ -188,7 +197,7 @@ model Transaction {
     IdempotencyKey        String?
     createdAt             DateTime      @default(now())
     updatedAt             DateTime      @updatedAt
-    consumer              Consumer      @relation(fields: [consumerId], references: [id])
+    Consumer              Consumer?     @relation(fields: [consumerId], references: [id])
     order                 Order         @relation(fields: [orderId], references: [id])
     FeePlan               FeePlan?      @relation(fields: [feePlanId], references: [id])
 
@@ -263,4 +272,10 @@ enum PaymentStatus {
     CANCELLED
     VOID
     USER_DROPPED
+}
+
+enum FeePlanStatus {
+    DUE
+    PAID
+    OVERDUE
 }
