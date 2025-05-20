@@ -104,15 +104,13 @@ model Consumer {
 // Member model (Links consumers to providers)
 model Member {
     id           String    @id @default(uuid())
-    createdAt    DateTime  @default(now())
-    updatedAt    DateTime  @updatedAt
     uniqueId     String    @default(uuid())
     firstName    String
     middleName   String?
     lastName     String
-    dateOfBirth  DateTime?
-    gender       String?
-    phone        String    @unique @db.VarChar(10)
+    dateOfBirth  DateTime  @db.Date
+    gender       Gender?
+    phone        String    @db.VarChar(10)
     email        String?
     category     String?
     subcategory  String?
@@ -120,9 +118,11 @@ model Member {
     relationship String?
     consumerId   String?
     providerId   String
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
     consumer     Consumer? @relation(fields: [consumerId], references: [id])
     provider     Provider  @relation(fields: [providerId], references: [id])
-    FeePlan      FeePlan[]
+    feePlans     FeePlan[]
 
     @@unique([providerId, uniqueId])
 }
@@ -136,7 +136,7 @@ model FeePlan {
     description        String?
     amount             Decimal       @db.Decimal(10, 2)
     status             FeePlanStatus @default(DUE)
-    dueDate            DateTime
+    dueDate            DateTime      @db.Date
     isOfflinePaid      Boolean       @default(false)
     consumerClaimsPaid Boolean       @default(false)
     createdAt          DateTime      @default(now())
@@ -278,4 +278,10 @@ enum FeePlanStatus {
     DUE
     PAID
     OVERDUE
+}
+
+enum Gender {
+    MALE
+    FEMALE
+    OTHER
 }
