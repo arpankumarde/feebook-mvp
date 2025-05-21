@@ -1,12 +1,12 @@
 "use client";
 
-import axios from "axios";
 import { OrderEntity } from "cashfree-pg";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import api from "@/lib/api";
 
 const Page = () => {
   const router = useRouter();
@@ -22,7 +22,7 @@ const Page = () => {
       try {
         setIsLoading(true);
         setError(null);
-        const { data } = await axios.get<OrderEntity>("/api/pg/verify-order", {
+        const { data } = await api.get<OrderEntity>("/api/v1/pg/verify-order", {
           params: { orderId },
         });
         setOrderData(data);
@@ -51,7 +51,7 @@ const Page = () => {
   }, [orderId]);
 
   const handleBackToPayment = () => {
-    router.push("/pay");
+    router.push("/pay-direct");
   };
 
   return (
