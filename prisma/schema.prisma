@@ -194,12 +194,12 @@ model Transaction {
     webhookSignature      String
     webhookTimestamp      DateTime
     webhookVersion        String
-    IdempotencyKey        String?
+    idempotencyKey        String?
     createdAt             DateTime      @default(now())
     updatedAt             DateTime      @updatedAt
-    Consumer              Consumer?     @relation(fields: [consumerId], references: [id])
+    consumer              Consumer?     @relation(fields: [consumerId], references: [id])
     order                 Order         @relation(fields: [orderId], references: [id])
-    FeePlan               FeePlan?      @relation(fields: [feePlanId], references: [id])
+    feePlan               FeePlan?      @relation(fields: [feePlanId], references: [id])
 
     @@index([orderId])
     @@index([consumerId])
@@ -265,6 +265,7 @@ enum OrderStatus {
 }
 
 enum PaymentStatus {
+    SUCCESS
     FAILED
     NOT_ATTEMPTED
     PENDING

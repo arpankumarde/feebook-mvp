@@ -49,7 +49,7 @@ const Page = () => {
       setIsLoading(true);
       setError(null);
       const { data } = await api.get(
-        `/api/provider/by-code/${organizationCode}`
+        `/api/v1/provider/by-code/${organizationCode}`
       );
       setProvider(data);
       setStep(2);
@@ -70,7 +70,7 @@ const Page = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const { data } = await api.get(`/api/provider/member/by-uniqueid`, {
+      const { data } = await api.get(`/api/v1/provider/member/by-uniqueid`, {
         params: {
           providerId: provider?.id,
           uniqueId: memberUniqueId,

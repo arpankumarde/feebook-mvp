@@ -13,25 +13,13 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
-import ShortUniqueId from "short-unique-id";
 import { setCookie } from "cookies-next/client";
+import genShortCode from "@/utils/genShortCode";
 
 const Page = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  function genCode(name: string) {
-    const initials = name
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase())
-      .join("")
-      .slice(0, 2)
-      .padEnd(3, "0");
-    const uid = new ShortUniqueId({ length: 4, dictionary: "alphanum_upper" });
-
-    return initials + uid.rnd();
-  }
 
   return (
     <div>
@@ -52,7 +40,7 @@ const Page = () => {
               phone: formData.get("phone"),
               password: formData.get("password") as string,
               accountType: formData.get("accountType") as AccountType,
-              code: genCode(formData.get("name") as string),
+              code: genShortCode(formData.get("name") as string),
             };
 
             const { provider }: { provider: Provider } = (
