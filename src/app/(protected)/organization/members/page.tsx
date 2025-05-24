@@ -6,14 +6,15 @@ import { Member, Provider } from "@/generated/prisma";
 import { getCookie } from "cookies-next/client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { PROVIDER_COOKIE } from "@/constants/cookies";
 
 const Page = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const providerId = getCookie("__fbprovider")
-    ? (JSON.parse(getCookie("__fbprovider") ?? "{}") as Provider).id
+  const providerId = getCookie(PROVIDER_COOKIE)
+    ? (JSON.parse(getCookie(PROVIDER_COOKIE) ?? "{}") as Provider).id
     : null;
 
   useEffect(() => {
@@ -26,7 +27,7 @@ const Page = () => {
         }
 
         const members = (
-          await api.get(`/api/provider/member?providerId=${providerId}`)
+          await api.get(`/api/v1/provider/member?providerId=${providerId}`)
         ).data as Member[];
         setMembers(members);
       } catch (err) {

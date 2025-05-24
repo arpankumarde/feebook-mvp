@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { setCookie } from "cookies-next/client";
 import genShortCode from "@/utils/genShortCode";
+import { PROVIDER_COOKIE } from "@/constants/cookies";
 
 const Page = () => {
   const router = useRouter();
@@ -44,14 +45,14 @@ const Page = () => {
             };
 
             const { provider }: { provider: Provider } = (
-              await api.post("/api/provider", data)
+              await api.post("/api/v1/provider", data)
             ).data;
 
             if (!provider) {
               throw new Error("Failed to create organization");
             }
 
-            setCookie("__fbprovider_token", provider, {
+            setCookie(PROVIDER_COOKIE, provider, {
               maxAge: 60 * 60 * 24 * 7,
             });
 

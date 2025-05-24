@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PROVIDER_COOKIE } from "@/constants/cookies";
 
 interface MemberFormData {
   firstName: string;
@@ -93,7 +94,7 @@ const Page = () => {
   };
 
   useEffect(() => {
-    const provider = JSON.parse(getCookie("__fbprovider") ?? "") as Provider;
+    const provider = JSON.parse(getCookie(PROVIDER_COOKIE) ?? "") as Provider;
     setFormData((prev) => ({ ...prev, providerId: provider.id }));
   }, []);
 

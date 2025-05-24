@@ -84,8 +84,10 @@ export async function GET(request: NextRequest) {
   if (memberId && providerId) {
     const member = await db.member.findUnique({
       where: {
-        id: memberId,
-        providerId: providerId,
+        providerId_uniqueId: {
+          providerId: providerId,
+          uniqueId: memberId,
+        },
       },
       include: {
         feePlans: true,

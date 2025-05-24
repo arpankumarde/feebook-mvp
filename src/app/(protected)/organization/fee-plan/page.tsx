@@ -18,6 +18,7 @@ import { getCookie } from "cookies-next/client";
 import { Provider, Member, FeePlan } from "@/generated/prisma";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { PROVIDER_COOKIE } from "@/constants/cookies";
 
 interface ExtendedMember extends Member {
   feePlans: FeePlan[] | null;
@@ -29,13 +30,20 @@ interface FeePlanFormData {
   description: string;
   amount: string;
   dueDate: Date | undefined;
+  isPaid: boolean;
   isDeleted?: boolean;
 }
 
 const Page = () => {
-  const providerId = getCookie("__fbprovider")
-    ? (JSON.parse(getCookie("__fbprovider") ?? "{}") as Provider).id
+  const providerId = getCookie(PROVIDER_COOKIE)
+    ? (JSON.parse(getCookie(PROVIDER_COOKIE) ?? "{}") as Provider).id
     : null;
+
+  useEffect(() => {
+    if (!providerId) {
+      toast.error("Provider not found. Please log in again.");
+    }
+  }, [providerId]);
 
   const [searchId, setSearchId] = useState("");
   const [member, setMember] = useState<ExtendedMember | null>(null);
@@ -47,6 +55,7 @@ const Page = () => {
       description: "",
       amount: "",
       dueDate: undefined,
+      isPaid: false,
     },
   ]);
   // Store original fee plans to compare changes
@@ -64,9 +73,9 @@ const Page = () => {
     setMember(null);
 
     try {
-      // Search by uniqueId only
+      // Search by memberId only
       const response = await api.get(
-        `/api/provider/member?providerId=${providerId}&uniqueId=${searchId}`
+        `/api/v1/provider/member?providerId=${providerId}&memberId=${searchId}`
       );
 
       if (!response.data) {
@@ -83,6 +92,7 @@ const Page = () => {
           description: plan.description || "",
           amount: plan.amount.toString(),
           dueDate: new Date(plan.dueDate),
+          isPaid: plan.status === "PAID",
           isDeleted: false,
         }));
         setFeePlans(existingPlans);
@@ -98,6 +108,7 @@ const Page = () => {
             description: "",
             amount: "",
             dueDate: undefined,
+            isPaid: false,
           },
         ]);
         setOriginalFeePlans([]);
@@ -119,6 +130,7 @@ const Page = () => {
         description: "",
         amount: "",
         dueDate: undefined,
+        isPaid: false,
       },
     ]);
   };
@@ -178,7 +190,7 @@ const Page = () => {
       const deletedPlans = feePlans.filter((plan) => plan.isDeleted && plan.id);
       for (const plan of deletedPlans) {
         promises.push(
-          api.delete(`/api/provider/feeplan`, {
+          api.delete(`/api/v1/provider/feeplan`, {
             data: { feePlanId: plan.id },
           })
         );
@@ -213,7 +225,7 @@ const Page = () => {
           // Only update if modified
           if (isModified) {
             promises.push(
-              api.put(`/api/provider/feeplan`, {
+              api.put(`/api/v1/provider/feeplan`, {
                 feePlan: { ...feePlanData, id: plan.id },
               })
             );
@@ -221,7 +233,7 @@ const Page = () => {
         } else {
           // Create new plan
           promises.push(
-            api.post("/api/provider/feeplan", { feePlan: feePlanData })
+            api.post("/api/v1/provider/feeplan", { feePlan: feePlanData })
           );
         }
       }
@@ -327,6 +339,7 @@ const Page = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => removeFeePlan(index)}
+                            disabled={plan.isPaid}
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -348,6 +361,7 @@ const Page = () => {
                               handleFeePlanChange(index, "name", e.target.value)
                             }
                             placeholder="Tuition Fee"
+                            disabled={plan.isPaid}
                             required
                           />
                         </div>
@@ -370,6 +384,7 @@ const Page = () => {
                               )
                             }
                             placeholder="May Month"
+                            disabled={plan.isPaid}
                           />
                         </div>
 
@@ -394,6 +409,7 @@ const Page = () => {
                             step={0.01}
                             min={1}
                             placeholder="Enter amount"
+                            disabled={plan.isPaid}
                             required
                           />
                         </div>
@@ -413,6 +429,7 @@ const Page = () => {
                                   "w-full justify-start text-left font-normal",
                                   !plan.dueDate && "text-muted-foreground"
                                 )}
+                                disabled={plan.isPaid}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {plan.dueDate ? (
