@@ -14,11 +14,10 @@ import { format } from "date-fns";
 import { CalendarIcon, PlusCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
-import { getCookie } from "cookies-next/client";
 import { Provider, Member, FeePlan } from "@/generated/prisma";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { PROVIDER_COOKIE } from "@/constants/cookies";
+import { useProviderAuth } from "@/hooks/use-provider-auth";
 
 interface ExtendedMember extends Member {
   feePlans: FeePlan[] | null;
@@ -35,15 +34,13 @@ interface FeePlanFormData {
 }
 
 const Page = () => {
-  const providerId = getCookie(PROVIDER_COOKIE)
-    ? (JSON.parse(getCookie(PROVIDER_COOKIE) ?? "{}") as Provider).id
-    : null;
+  const { provider, isAuthenticated } = useProviderAuth();
 
   useEffect(() => {
-    if (!providerId) {
+    if (!isAuthenticated) {
       toast.error("Provider not found. Please log in again.");
     }
-  }, [providerId]);
+  }, [isAuthenticated]);
 
   const [searchId, setSearchId] = useState("");
   const [member, setMember] = useState<ExtendedMember | null>(null);
@@ -66,7 +63,7 @@ const Page = () => {
   const [success, setSuccess] = useState(false);
 
   const fetchMember = async () => {
-    if (!searchId || !providerId) return;
+    if (!searchId || !provider?.id) return;
 
     setLoading(true);
     setError("");
@@ -75,7 +72,7 @@ const Page = () => {
     try {
       // Search by memberId only
       const response = await api.get(
-        `/api/v1/provider/member?providerId=${providerId}&memberId=${searchId}`
+        `/api/v1/provider/member?providerId=${provider.id}&memberId=${searchId}`
       );
 
       if (!response.data) {
@@ -163,7 +160,7 @@ const Page = () => {
   };
 
   const handleSubmit = async () => {
-    if (!member || !providerId) return;
+    if (!member || !provider?.id) return;
 
     setLoading(true);
     setError("");
@@ -199,7 +196,7 @@ const Page = () => {
       // Handle new and modified plans
       for (const plan of visiblePlans) {
         const feePlanData = {
-          providerId,
+          providerId: provider.id,
           memberId: member.id,
           name: plan.name,
           description: plan.description,

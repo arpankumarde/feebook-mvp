@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import api from "@/lib/api";
 import type { AxiosError } from "axios";
-import { getCookie } from "cookies-next/client";
 import { Provider, Gender } from "@/generated/prisma";
 import {
   Select,
@@ -15,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PROVIDER_COOKIE } from "@/constants/cookies";
+import { useProviderAuth } from "@/hooks/use-provider-auth";
 
 interface MemberFormData {
   firstName: string;
@@ -38,6 +37,7 @@ interface ApiErrorResponse {
 }
 
 const Page = () => {
+  const { provider } = useProviderAuth();
   const [formData, setFormData] = useState<MemberFormData>({
     firstName: "",
     middleName: "",
@@ -68,7 +68,7 @@ const Page = () => {
     setError("");
 
     try {
-      await api.post("/api/provider/member", { member: formData });
+      await api.post("/api/v1/provider/member", { member: formData });
       setSuccess(true);
       setFormData({
         firstName: "",
@@ -94,9 +94,13 @@ const Page = () => {
   };
 
   useEffect(() => {
-    const provider = JSON.parse(getCookie(PROVIDER_COOKIE) ?? "") as Provider;
-    setFormData((prev) => ({ ...prev, providerId: provider.id }));
-  }, []);
+    if (!provider?.id) {
+      setError("Provider information not found");
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, providerId: provider?.id }));
+  }, [provider?.id]);
 
   return (
     <div>

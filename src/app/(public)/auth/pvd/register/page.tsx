@@ -13,9 +13,9 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
-import { setCookie } from "cookies-next/client";
 import genShortCode from "@/utils/genShortCode";
-import { PROVIDER_COOKIE } from "@/constants/cookies";
+import { setProviderCookie } from "@/lib/auth-utils";
+import { SLUGS } from "@/constants/slugs";
 
 const Page = () => {
   const router = useRouter();
@@ -52,11 +52,9 @@ const Page = () => {
               throw new Error("Failed to create organization");
             }
 
-            setCookie(PROVIDER_COOKIE, provider, {
-              maxAge: 60 * 60 * 24 * 7,
-            });
+            setProviderCookie(provider);
 
-            router.push(`/organization/dashboard`);
+            router.push(`/${SLUGS.PROVIDER}/dashboard`);
           } catch (error) {
             console.error(error);
             setError(

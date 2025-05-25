@@ -18,17 +18,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Check if provider exists
-    const existingProvider = await db.provider.findUnique({
+    // Check if moderator exists
+    const existingModerator = await db.moderator.findUnique({
       where: { email },
     });
 
-    if (!existingProvider) {
+    if (!existingModerator) {
       return NextResponse.json(
         {
           success: false,
-          error: "Provider not found",
-          message: "Provider not found",
+          error: "Moderator not found",
+          message: "Moderator not found",
         },
         { status: 404 }
       );
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     const isPasswordValid = await bcrypt.compare(
       password,
-      existingProvider.password
+      existingModerator.password
     );
 
     if (!isPasswordValid) {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: true, user: existingProvider, message: "Login successful" },
+      { success: true, user: existingModerator, message: "Login successful" },
       { status: 200 }
     );
   } catch (error) {
