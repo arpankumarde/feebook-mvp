@@ -13,16 +13,11 @@ import {
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
-import { setCookie } from "cookies-next/client";
-import { Provider } from "@/generated/prisma";
+import { Moderator } from "@/generated/prisma";
 import { toast } from "sonner";
-import { PROVIDER_COOKIE } from "@/constants/cookies";
-
-interface LoginResponse {
-  success: boolean;
-  provider?: Provider;
-  error?: string;
-}
+import { setModeratorCookie } from "@/lib/auth-utils";
+import { LoginResponse } from "@/types/auth";
+import { SLUGS } from "@/constants/slugs";
 
 const Page = () => {
   const router = useRouter();
@@ -37,23 +32,21 @@ const Page = () => {
     setError("");
 
     try {
-      const response = await api.post<LoginResponse>(
-        "/api/v1/auth/provider/login",
+      const response = await api.post<LoginResponse<Moderator>>(
+        "/api/v1/auth/moderator/login",
         {
           email,
           password,
         }
       );
 
-      const { success, provider, error: apiError } = response.data;
+      const { success, user, error: apiError } = response.data;
 
-      if (success && provider) {
-        setCookie(PROVIDER_COOKIE, provider, {
-          maxAge: 60 * 60 * 24 * 7,
-        });
+      if (success && user) {
+        setModeratorCookie(user);
 
         toast.success("Login successful!");
-        router.push("/organization/dashboard");
+        router.push(`/${SLUGS.MODERATOR}/dashboard`);
       } else {
         setError(apiError || "Login failed");
         toast.error(apiError || "Login failed");
@@ -72,11 +65,9 @@ const Page = () => {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">
-            Organization Login
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold">Moderator Login</CardTitle>
           <CardDescription>
-            Enter your credentials to access your organization account
+            Enter your credentials to access the moderator dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -88,7 +79,7 @@ const Page = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder="moderator@email.com"
                 required
               />
             </div>

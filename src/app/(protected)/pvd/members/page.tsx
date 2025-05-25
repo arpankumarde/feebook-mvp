@@ -2,20 +2,19 @@
 
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
-import { Member, Provider } from "@/generated/prisma";
-import { getCookie } from "cookies-next/client";
+import { Member } from "@/generated/prisma";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PROVIDER_COOKIE } from "@/constants/cookies";
+import { useProviderAuth } from "@/hooks/use-provider-auth";
+import { SLUGS } from "@/constants/slugs";
 
 const Page = () => {
+  const { provider } = useProviderAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const providerId = getCookie(PROVIDER_COOKIE)
-    ? (JSON.parse(getCookie(PROVIDER_COOKIE) ?? "{}") as Provider).id
-    : null;
+  const providerId = provider?.id || null;
 
   useEffect(() => {
     const fetchFeePlans = async () => {
@@ -47,7 +46,7 @@ const Page = () => {
 
       <div className="mt-4 flex justify-end">
         <Button asChild>
-          <Link href="/organization/members/add">Add Member</Link>
+          <Link href={`/${SLUGS.PROVIDER}/members/add`}>Add Member</Link>
         </Button>
       </div>
 
@@ -110,14 +109,14 @@ const Page = () => {
                           asChild
                         >
                           <Link
-                            href={`/organization/members/edit/${member.id}`}
+                            href={`/${SLUGS.PROVIDER}/members/edit/${member.id}`}
                           >
                             Edit
                           </Link>
                         </Button>
                         <Button variant="outline" size="sm">
                           <Link
-                            href={`/organization/members/view/${member.id}`}
+                            href={`/${SLUGS.PROVIDER}/members/view/${member.id}`}
                           >
                             View
                           </Link>

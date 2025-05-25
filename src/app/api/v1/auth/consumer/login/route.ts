@@ -3,10 +3,10 @@ import bcrypt from "bcryptjs";
 import db from "@/lib/db";
 
 export async function POST(request: NextRequest) {
-  const { email, password } = await request.json();
+  const { phone, password } = await request.json();
 
   // Validate input
-  if (!email || !password) {
+  if (!phone || !password) {
     return NextResponse.json(
       {
         success: false,
@@ -18,17 +18,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Check if provider exists
-    const existingProvider = await db.provider.findUnique({
-      where: { email },
+    // Check if consumer exists
+    const existingConsumer = await db.consumer.findUnique({
+      where: { phone },
     });
 
-    if (!existingProvider) {
+    if (!existingConsumer) {
       return NextResponse.json(
         {
           success: false,
-          error: "Provider not found",
-          message: "Provider not found",
+          error: "Consumer not found",
+          message: "Consumer not found",
         },
         { status: 404 }
       );
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     const isPasswordValid = await bcrypt.compare(
       password,
-      existingProvider.password
+      existingConsumer.password
     );
 
     if (!isPasswordValid) {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: true, user: existingProvider, message: "Login successful" },
+      { success: true, user: existingConsumer, message: "Login successful" },
       { status: 200 }
     );
   } catch (error) {

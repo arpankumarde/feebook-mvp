@@ -17,7 +17,11 @@ export async function POST(request: NextRequest) {
   // Validate input
   if (!name || !email || !phone || !password || !code || !accountType) {
     return NextResponse.json(
-      { success: false, error: "All fields are required" },
+      {
+        success: false,
+        error: "All fields are required",
+        message: "All fields are required",
+      },
       { status: 400 }
     );
   }
@@ -32,7 +36,11 @@ export async function POST(request: NextRequest) {
 
     if (existingProvider) {
       return NextResponse.json(
-        { success: false, error: "Code already exists" },
+        {
+          success: false,
+          error: "Code already exists",
+          message: "Code already exists",
+        },
         { status: 400 }
       );
     }
@@ -53,13 +61,17 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: true, provider: newProvider },
+      {
+        success: true,
+        user: newProvider,
+        message: "Provider created successfully",
+      },
       { status: 201 }
     );
   } catch (error) {
     console.error("Error creating provider:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to create provider" },
+      { success: false, error, message: "Failed to create provider" },
       { status: 500 }
     );
   }
