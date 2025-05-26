@@ -7,7 +7,7 @@ export interface AuthUser {
   data: Moderator | Provider | Consumer | null;
 }
 
-export interface LoginResponse<T = any> {
+export interface LoginResponse<T = UserType> {
   success: boolean;
   user?: T;
   error?: string;

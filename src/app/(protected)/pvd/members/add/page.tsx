@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import api from "@/lib/api";
 import type { AxiosError } from "axios";
-import { Provider, Gender } from "@/generated/prisma";
+import { Gender } from "@/generated/prisma";
 import {
   Select,
   SelectContent,
@@ -66,6 +66,12 @@ const Page = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    if (!formData.providerId) {
+      setError("Provider ID is required");
+      setLoading(false);
+      return;
+    }
 
     try {
       await api.post("/api/v1/provider/member", { member: formData });
