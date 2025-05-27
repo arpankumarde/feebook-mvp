@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AuthService } from "@/lib/auth-service";
-import { Provider } from "@/generated/prisma";
+import { Provider } from "@prisma/client";
 
 export function useProviderAuth() {
   const [provider, setProvider] = useState<Provider | null>(null);

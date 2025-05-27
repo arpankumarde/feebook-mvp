@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AuthService } from "@/lib/auth-service";
-import { Moderator } from "@/generated/prisma";
+import { Moderator } from "@prisma/client";
 
 export function useModeratorAuth() {
   const [moderator, setModerator] = useState<Moderator | null>(null);

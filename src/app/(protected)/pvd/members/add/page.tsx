@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import api from "@/lib/api";
 import type { AxiosError } from "axios";
-import { Gender } from "@/generated/prisma";
+import { Gender } from "@prisma/client";
 import {
   Select,
   SelectContent,

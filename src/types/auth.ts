@@ -1,4 +1,4 @@
-import { Provider, Consumer, Moderator } from "@/generated/prisma";
+import { Provider, Consumer, Moderator } from "@prisma/client";
 
 export type UserType = "moderator" | "provider" | "consumer" | "none";
 

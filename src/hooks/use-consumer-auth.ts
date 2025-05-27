@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AuthService } from "@/lib/auth-service";
-import { Consumer } from "@/generated/prisma";
+import { Consumer } from "@prisma/client";
 
 export function useConsumerAuth() {
   const [consumer, setConsumer] = useState<Consumer | null>(null);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import cashfree from "@/lib/cfpg_server";
 import db from "@/lib/db";
-import { OrderStatus } from "@/generated/prisma";
+import { OrderStatus } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
