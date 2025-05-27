@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(member);
   } else if (providerId) {
-    const member = await db.member.findFirst({
+    const member = await db.member.findMany({
       where: {
         providerId: providerId,
       },
