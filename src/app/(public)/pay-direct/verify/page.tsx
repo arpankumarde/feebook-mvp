@@ -2,13 +2,13 @@
 
 import { OrderEntity } from "cashfree-pg";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import api from "@/lib/api";
 
-const Page = () => {
+const PayDirect = () => {
   const router = useRouter();
   const params = useSearchParams();
   const orderId = params.get("orderId");
@@ -120,6 +120,14 @@ const Page = () => {
         </CardContent>
       </Card>
     </div>
+  );
+};
+
+const Page = () => {
+  return (
+    <Suspense>
+      <PayDirect />
+    </Suspense>
   );
 };
 

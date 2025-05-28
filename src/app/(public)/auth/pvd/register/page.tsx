@@ -1,6 +1,6 @@
 "use client";
 
-import { AccountType, Provider } from "@/generated/prisma";
+import { AccountType, Provider } from "@prisma/client";
 import {
   Select,
   SelectContent,
