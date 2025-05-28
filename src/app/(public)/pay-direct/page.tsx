@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FeePlan, Member, Provider } from "@/generated/prisma";
+import { FeePlan, Member, Provider } from "@prisma/client";
 import { toast } from "sonner";
 import cashfree from "@/lib/cfpg_client";
 import { OrderEntity } from "cashfree-pg";

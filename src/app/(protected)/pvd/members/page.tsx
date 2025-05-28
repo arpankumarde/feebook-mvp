@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
-import { Member } from "@/generated/prisma";
+import { Member } from "@prisma/client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useProviderAuth } from "@/hooks/use-provider-auth";
@@ -38,7 +38,7 @@ const Page = () => {
     };
 
     fetchFeePlans();
-  }, []);
+  }, [provider?.id]);
 
   return (
     <div>

@@ -13,7 +13,7 @@ import {
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
-import { Moderator } from "@/generated/prisma";
+import { Moderator } from "@prisma/client";
 import { toast } from "sonner";
 import { setModeratorCookie } from "@/lib/auth-utils";
 import { LoginResponse } from "@/types/auth";

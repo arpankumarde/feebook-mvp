@@ -14,7 +14,7 @@ import {
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
-import { Consumer } from "@/generated/prisma";
+import { Consumer } from "@prisma/client";
 import { toast } from "sonner";
 import Link from "next/link";
 import { LoginResponse } from "@/types/auth";

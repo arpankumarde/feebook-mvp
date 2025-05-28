@@ -1,5 +1,5 @@
 import { getCookie, deleteCookie } from "cookies-next/client";
-import { Provider, Consumer, Moderator } from "@/generated/prisma";
+import { Provider, Consumer, Moderator } from "@prisma/client";
 import { COOKIES } from "@/constants/cookies";
 import { UserType } from "@/types/auth";
 

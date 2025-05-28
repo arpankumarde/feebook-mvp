@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
-import { Member, Prisma } from "@/generated/prisma";
+import { Member, Prisma } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
   try {

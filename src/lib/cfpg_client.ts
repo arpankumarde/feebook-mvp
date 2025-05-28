@@ -2,7 +2,7 @@
 
 import { load } from "@cashfreepayments/cashfree-js";
 
-var cashfree = await load({
+const cashfree = await load({
   mode: "sandbox",
 });
 

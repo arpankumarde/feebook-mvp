@@ -14,7 +14,7 @@ import { format } from "date-fns";
 import { CalendarIcon, PlusCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
-import { Provider, Member, FeePlan } from "@/generated/prisma";
+import { Member, FeePlan } from "@prisma/client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useProviderAuth } from "@/hooks/use-provider-auth";

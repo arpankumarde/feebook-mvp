@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import cashfree from "@/lib/cfpg_server";
 import { CreateOrderRequest } from "cashfree-pg";
-import { OrderStatus } from "@/generated/prisma";
+import { OrderStatus } from "@prisma/client";
 import getFullName from "@/utils/getFullName";
 
 export interface CreateOrderDto {

@@ -1,5 +1,5 @@
 import { setCookie } from "cookies-next/client";
-import { Provider, Consumer, Moderator } from "@/generated/prisma";
+import { Provider, Consumer, Moderator } from "@prisma/client";
 import { COOKIES, COOKIE_OPTIONS } from "@/constants/cookies";
 
 export function setModeratorCookie(moderator: Moderator) {
