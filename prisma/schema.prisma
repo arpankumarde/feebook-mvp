@@ -87,43 +87,54 @@ model BankAccount {
 
 // Consumer model (End users who pay fees)
 model Consumer {
-    id              String        @id @default(uuid())
-    email           String?       @unique
-    phone           String        @unique @db.VarChar(10)
+    id              String           @id @default(uuid())
+    email           String           @unique
+    phone           String           @unique @db.VarChar(10)
     password        String
     firstName       String?
     lastName        String?
-    isPhoneVerified Boolean       @default(false)
-    createdAt       DateTime      @default(now())
-    updatedAt       DateTime      @updatedAt
-    memberships     Member[]
+    isPhoneVerified Boolean          @default(false)
+    createdAt       DateTime         @default(now())
+    updatedAt       DateTime         @updatedAt
+    memberships     ConsumerMember[]
     transactions    Transaction[]
 }
 
-// Member model (Links consumers to providers)
+// Member model (Members of providers)
 model Member {
-    id           String    @id @default(uuid())
-    uniqueId     String    @default(uuid())
-    firstName    String
-    middleName   String?
-    lastName     String
-    dateOfBirth  DateTime  @db.Date
-    gender       Gender?
-    phone        String    @db.VarChar(10)
-    email        String?
-    category     String?
-    subcategory  String?
-    guardianName String?
-    relationship String?
-    consumerId   String?
-    providerId   String
-    createdAt    DateTime  @default(now())
-    updatedAt    DateTime  @updatedAt
-    consumer     Consumer? @relation(fields: [consumerId], references: [id])
-    provider     Provider  @relation(fields: [providerId], references: [id])
-    feePlans     FeePlan[]
+    id                  String           @id @default(uuid())
+    uniqueId            String           @default(uuid())
+    firstName           String
+    middleName          String?
+    lastName            String
+    dateOfBirth         DateTime?        @db.Date
+    gender              Gender?
+    phone               String           @db.VarChar(10)
+    email               String?
+    category            String?
+    subcategory         String?
+    guardianName        String?
+    relationship        String?
+    providerId          String
+    createdAt           DateTime         @default(now())
+    updatedAt           DateTime         @updatedAt
+    provider            Provider         @relation(fields: [providerId], references: [id])
+    feePlans            FeePlan[]
+    consumerMemberships ConsumerMember[]
 
     @@unique([providerId, uniqueId])
+}
+
+// Junction table for Consumer-Member many-to-many relationship
+model ConsumerMember {
+    id         String   @id @default(uuid())
+    consumerId String
+    memberId   String
+    claimedAt  DateTime @default(now())
+    consumer   Consumer @relation(fields: [consumerId], references: [id])
+    member     Member   @relation(fields: [memberId], references: [id])
+
+    @@unique([consumerId, memberId])
 }
 
 // Fee plan model (Fee structure created by providers)
