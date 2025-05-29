@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
+import { ApiErrorHandler } from "@/lib/error-handler";
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,6 +31,18 @@ export async function GET(request: NextRequest) {
         phone: true,
         category: true,
         subcategory: true,
+        consumerMemberships: {
+          include: {
+            consumer: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -40,7 +53,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get current date and date one month from now
+    // Get current date and date one month from now for fee plans
     const currentDate = new Date();
     const oneMonthFromNow = new Date();
     oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
@@ -66,10 +79,9 @@ export async function GET(request: NextRequest) {
       feePlans,
     });
   } catch (error) {
-    console.error("Error fetching member by uniqueId:", error);
-    return NextResponse.json(
-      { message: "Failed to fetch member details" },
-      { status: 500 }
+    return ApiErrorHandler.handleApiError(
+      error,
+      "Failed to fetch member details"
     );
   }
 }

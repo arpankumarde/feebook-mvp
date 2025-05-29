@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
+import { ApiErrorHandler } from "@/lib/error-handler";
 
 export async function GET(
   request: NextRequest,
@@ -10,7 +11,10 @@ export async function GET(
 
     if (!code) {
       return NextResponse.json(
-        { message: "Organization code is required" },
+        {
+          success: false,
+          error: "Organization code is required",
+        },
         { status: 400 }
       );
     }
@@ -28,17 +32,20 @@ export async function GET(
 
     if (!provider) {
       return NextResponse.json(
-        { message: "Organization not found" },
+        {
+          success: false,
+          error: "Organization not found",
+        },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(provider);
+    return NextResponse.json({
+      success: true,
+      data: provider,
+    });
   } catch (error) {
     console.error("Error fetching provider by code:", error);
-    return NextResponse.json(
-      { message: "Failed to fetch organization details" },
-      { status: 500 }
-    );
+    return ApiErrorHandler.handlePrismaError(error);
   }
 }
