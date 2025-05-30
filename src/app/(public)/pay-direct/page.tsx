@@ -126,7 +126,7 @@ const Page = () => {
       setIsLoading(true);
       const { data } = await api.post<OrderEntity>("/api/v1/pg/create-order", {
         feePlanId,
-        memberId: member?.id,
+        memberId: member?.id, // Use member.id instead of member.uniqueId
         providerId: provider?.id,
       });
 
