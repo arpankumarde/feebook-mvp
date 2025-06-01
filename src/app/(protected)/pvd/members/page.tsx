@@ -38,7 +38,7 @@ const Page = () => {
     };
 
     fetchFeePlans();
-  }, [provider?.id]);
+  }, [providerId]);
 
   return (
     <div>

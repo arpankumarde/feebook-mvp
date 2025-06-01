@@ -18,7 +18,6 @@ import { FeePlan, Member, Provider } from "@prisma/client";
 import { toast } from "sonner";
 import cashfree from "@/lib/cfpg_client";
 import { OrderEntity } from "cashfree-pg";
-import { CreateOrderDto } from "@/app/api/v1/pg/create-order/route";
 
 interface PGResponse {
   paymentDetails?: {
@@ -91,7 +90,7 @@ const Page = () => {
     paymentSessionId: string,
     currentOrderId: string
   ) => {
-    let checkoutOptions = {
+    const checkoutOptions = {
       paymentSessionId: paymentSessionId,
       // redirectTarget: "_top",
       redirectTarget: "_modal",

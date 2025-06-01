@@ -39,8 +39,10 @@ export function useConsumerAuth() {
         return;
       }
 
-      const response = await api.post(`/api/v1/consumer/memberships`, {
-        consumerId: consumer.id,
+      const response = await api.get(`/api/v1/consumer/memberships`, {
+        params: {
+          consumerId: consumer.id,
+        },
       });
 
       if (response.data.memberships) {

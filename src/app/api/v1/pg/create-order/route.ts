@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let orderRequestBody: CreateOrderRequest = {
+    const orderRequestBody: CreateOrderRequest = {
       order_amount: Number(feePlan?.amount),
       order_currency: "INR",
       customer_details: {

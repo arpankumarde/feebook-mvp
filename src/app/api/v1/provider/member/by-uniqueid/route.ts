@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get current date and date one month from now for fee plans
-    const currentDate = new Date();
+    // const currentDate = new Date();
     const oneMonthFromNow = new Date();
     oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
 
