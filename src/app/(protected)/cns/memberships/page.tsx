@@ -6,7 +6,14 @@ import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { SLUGS } from "@/constants/slugs";
 
 interface Provider {
   id: string;
@@ -45,7 +52,7 @@ const LinkMembership = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
+
   const [provider, setProvider] = useState<Provider | null>(null);
   const [member, setMember] = useState<Member | null>(null);
   const [feePlans, setFeePlans] = useState<FeePlan[]>([]);
@@ -59,9 +66,11 @@ const LinkMembership = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await api.get(`/api/v1/provider/by-code/${providerCode}`);
-      
+
+      const response = await api.get(
+        `/api/v1/provider/by-code/${providerCode}`
+      );
+
       if (response.data.success) {
         setProvider(response.data.data);
         setStep(2);
@@ -84,14 +93,14 @@ const LinkMembership = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await api.get("/api/v1/provider/member/by-uniqueid", {
         params: {
           providerId: provider?.id,
           uniqueId: memberUniqueId,
         },
       });
-      
+
       setMember(response.data.member);
       setFeePlans(response.data.feePlans || []);
       setStep(3);
@@ -111,17 +120,17 @@ const LinkMembership = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await api.post("/api/v1/consumer/memberships", {
         consumerId: consumer.id,
         providerCode: provider.code,
         memberUniqueId: memberUniqueId,
       });
-      
+
       if (response.data.success) {
         setSuccess("Membership claimed successfully!");
         setTimeout(() => {
-          window.location.href = "/cns/dashboard";
+          window.location.href = `/${SLUGS.CONSUMER}/dashboard`;
         }, 2000);
       } else {
         setError(response.data.error || "Failed to claim membership");
@@ -151,24 +160,22 @@ const LinkMembership = () => {
   return (
     <div>
       <h2>Link New Membership</h2>
-      
+
       {error && (
-        <div style={{ color: "red", marginBottom: "1rem" }}>
-          Error: {error}
-        </div>
+        <div style={{ color: "red", marginBottom: "1rem" }}>Error: {error}</div>
       )}
-      
+
       {success && (
-        <div style={{ color: "green", marginBottom: "1rem" }}>
-          {success}
-        </div>
+        <div style={{ color: "green", marginBottom: "1rem" }}>{success}</div>
       )}
 
       {step === 1 && (
         <Card>
           <CardHeader>
             <CardTitle>Step 1: Find Your Organization</CardTitle>
-            <CardDescription>Enter the organization code provided by your institution</CardDescription>
+            <CardDescription>
+              Enter the organization code provided by your institution
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div style={{ marginBottom: "1rem" }}>
@@ -221,25 +228,59 @@ const LinkMembership = () => {
         <Card>
           <CardHeader>
             <CardTitle>Step 3: Confirm Membership</CardTitle>
-            <CardDescription>Please verify your information is correct</CardDescription>
+            <CardDescription>
+              Please verify your information is correct
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div style={{ marginBottom: "1rem" }}>
-              <p><strong>Name:</strong> {member.firstName} {member.middleName} {member.lastName}</p>
-              <p><strong>Member ID:</strong> {member.uniqueId}</p>
-              <p><strong>Organization:</strong> {provider?.name}</p>
-              {member.email && <p><strong>Email:</strong> {member.email}</p>}
-              {member.phone && <p><strong>Phone:</strong> {member.phone}</p>}
-              {member.category && <p><strong>Category:</strong> {member.category}</p>}
-              {member.subcategory && <p><strong>Subcategory:</strong> {member.subcategory}</p>}
+              <p>
+                <strong>Name:</strong> {member.firstName} {member.middleName}{" "}
+                {member.lastName}
+              </p>
+              <p>
+                <strong>Member ID:</strong> {member.uniqueId}
+              </p>
+              <p>
+                <strong>Organization:</strong> {provider?.name}
+              </p>
+              {member.email && (
+                <p>
+                  <strong>Email:</strong> {member.email}
+                </p>
+              )}
+              {member.phone && (
+                <p>
+                  <strong>Phone:</strong> {member.phone}
+                </p>
+              )}
+              {member.category && (
+                <p>
+                  <strong>Category:</strong> {member.category}
+                </p>
+              )}
+              {member.subcategory && (
+                <p>
+                  <strong>Subcategory:</strong> {member.subcategory}
+                </p>
+              )}
             </div>
 
             {feePlans.length > 0 && (
               <div style={{ marginBottom: "1rem" }}>
                 <h4>Pending Fee Plans ({feePlans.length})</h4>
                 {feePlans.map((plan) => (
-                  <div key={plan.id} style={{ border: "1px solid #eee", padding: "0.5rem", margin: "0.5rem 0" }}>
-                    <p><strong>{plan.name}</strong> - ₹{plan.amount}</p>
+                  <div
+                    key={plan.id}
+                    style={{
+                      border: "1px solid #eee",
+                      padding: "0.5rem",
+                      margin: "0.5rem 0",
+                    }}
+                  >
+                    <p>
+                      <strong>{plan.name}</strong> - ₹{plan.amount}
+                    </p>
                     <p>Due: {new Date(plan.dueDate).toLocaleDateString()}</p>
                   </div>
                 ))}

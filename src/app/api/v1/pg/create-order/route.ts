@@ -4,6 +4,7 @@ import cashfree from "@/lib/cfpg_server";
 import { CreateOrderRequest } from "cashfree-pg";
 import { OrderStatus } from "@prisma/client";
 import getFullName from "@/utils/getFullName";
+import { SLUGS } from "@/constants/slugs";
 
 export interface CreateOrderDto {
   consumerId?: string;
@@ -55,11 +56,12 @@ export async function POST(request: NextRequest) {
         customer_email: feePlan?.member?.email ?? undefined,
       },
       order_meta: {
-        return_url:
-          "http://localhost:3000/pay-direct/verify?orderId={order_id}",
+        return_url: body.consumerId
+          ? `${process.env.NEXT_PUBLIC_APP_URL}/${SLUGS.CONSUMER}/pay/verify?orderId={order_id}`
+          : `${process.env.NEXT_PUBLIC_APP_URL}/pay-direct/verify?orderId={order_id}`,
         payment_methods: "cc,dc,upi,app,banktransfer",
       },
-      order_note: "Sample Order Note",
+      order_note: `Payment for ${feePlan.name}`,
       order_tags: {
         feePlanId: body.feePlanId,
         memberId: body.memberId,

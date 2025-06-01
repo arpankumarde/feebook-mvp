@@ -4,10 +4,25 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
-import { ArrowLeft, Calendar, CreditCard, DollarSign } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  CreditCard,
+  DollarSign,
+  Loader2,
+} from "lucide-react";
+import { SLUGS } from "@/constants/slugs";
 
 interface DetailedMembershipData {
   id: string;
@@ -47,8 +62,10 @@ const PaymentSchedulePage = () => {
   const params = useParams();
   const router = useRouter();
   const membershipId = params.membershipId as string;
-  
-  const [membership, setMembership] = useState<DetailedMembershipData | null>(null);
+
+  const [membership, setMembership] = useState<DetailedMembershipData | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [payingFeePlanId, setPayingFeePlanId] = useState<string | null>(null);
@@ -59,8 +76,10 @@ const PaymentSchedulePage = () => {
         setLoading(true);
         setError(null);
 
-        const response = await api.get(`/api/v1/consumer/memberships/${membershipId}`);
-        
+        const response = await api.get(
+          `/api/v1/consumer/memberships/${membershipId}`
+        );
+
         if (response.data.success) {
           setMembership(response.data.data);
         } else {
@@ -84,12 +103,9 @@ const PaymentSchedulePage = () => {
 
     try {
       setPayingFeePlanId(feePlanId);
-      
-      // Navigate to payment page with all required parameters
-      const providerId = membership.member.provider.id;
-      const memberId = membership.member.uniqueId;
-      
-      window.location.href = `/pay-direct?providerId=${providerId}&memberId=${memberId}&feePlanId=${feePlanId}`;
+
+      // Navigate to payment page with only feePlanId
+      router.push(`/${SLUGS.CONSUMER}/pay?feePlanId=${feePlanId}`);
     } catch (err: any) {
       console.error("Error initiating payment:", err);
       setError("Failed to initiate payment");
@@ -102,7 +118,7 @@ const PaymentSchedulePage = () => {
     if (isOfflinePaid) {
       return <Badge variant="secondary">Offline Paid</Badge>;
     }
-    
+
     switch (status) {
       case "PAID":
         return <Badge variant="default">Paid</Badge>;
@@ -117,26 +133,36 @@ const PaymentSchedulePage = () => {
 
   const calculateTotalAmount = () => {
     if (!membership) return 0;
-    return membership.member.feePlans.reduce((total, plan) => total + Number(plan.amount), 0);
+    return membership.member.feePlans.reduce(
+      (total, plan) => total + Number(plan.amount),
+      0
+    );
   };
 
   const calculatePendingAmount = () => {
     if (!membership) return 0;
     return membership.member.feePlans
-      .filter(plan => plan.status !== "PAID" && !plan.isOfflinePaid)
+      .filter((plan) => plan.status !== "PAID" && !plan.isOfflinePaid)
       .reduce((total, plan) => total + Number(plan.amount), 0);
   };
 
   if (loading) {
-    return <div>Loading membership details...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Loading membership details...</span>
+        </div>
+      </div>
+    );
   }
 
   if (error || !membership) {
     return (
-      <div>
-        <div style={{ color: "red", marginBottom: "1rem" }}>
-          Error: {error || "Membership not found"}
-        </div>
+      <div className="space-y-4">
+        <Alert variant="destructive">
+          <AlertDescription>{error || "Membership not found"}</AlertDescription>
+        </Alert>
         <Button variant="outline" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Go Back
@@ -149,54 +175,83 @@ const PaymentSchedulePage = () => {
     membership.member.firstName,
     membership.member.middleName,
     membership.member.lastName,
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-  const sortedFeePlans = [...membership.member.feePlans].sort((a, b) => 
-    new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+  const sortedFeePlans = [...membership.member.feePlans].sort(
+    (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
   );
 
   return (
-    <div>
-      <div style={{ marginBottom: "2rem" }}>
+    <div className="space-y-6">
+      <div>
         <Button variant="outline" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Button>
       </div>
 
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
-          Payment Schedule
-        </h1>
-        <p style={{ color: "#666" }}>
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Payment Schedule</h1>
+        <p className="text-muted-foreground">
           View and manage payment schedules for your membership
         </p>
       </div>
 
       {/* Membership Overview */}
-      <Card style={{ marginBottom: "2rem" }}>
+      <Card>
         <CardHeader>
           <CardTitle>{memberName}</CardTitle>
           <CardDescription>
-            {membership.member.provider.name} | Member ID: {membership.member.uniqueId}
+            {membership.member.provider.name} | Member ID:{" "}
+            {membership.member.uniqueId}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
-            <div>
-              <p><strong>Organization:</strong> {membership.member.provider.name}</p>
-              <p><strong>Category:</strong> {membership.member.provider.category}</p>
-              <p><strong>Type:</strong> {membership.member.provider.type}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <p>
+                <span className="font-medium">Organization:</span>{" "}
+                {membership.member.provider.name}
+              </p>
+              <p>
+                <span className="font-medium">Category:</span>{" "}
+                {membership.member.provider.category}
+              </p>
+              <p>
+                <span className="font-medium">Type:</span>{" "}
+                {membership.member.provider.type}
+              </p>
             </div>
-            <div>
-              <p><strong>Member Category:</strong> {membership.member.category || "N/A"}</p>
-              <p><strong>Subcategory:</strong> {membership.member.subcategory || "N/A"}</p>
-              <p><strong>Claimed:</strong> {new Date(membership.claimedAt).toLocaleDateString()}</p>
+            <div className="space-y-2">
+              <p>
+                <span className="font-medium">Member Category:</span>{" "}
+                {membership.member.category || "N/A"}
+              </p>
+              <p>
+                <span className="font-medium">Subcategory:</span>{" "}
+                {membership.member.subcategory || "N/A"}
+              </p>
+              <p>
+                <span className="font-medium">Claimed:</span>{" "}
+                {new Date(membership.claimedAt).toLocaleDateString()}
+              </p>
             </div>
             {(membership.member.email || membership.member.phone) && (
-              <div>
-                {membership.member.email && <p><strong>Email:</strong> {membership.member.email}</p>}
-                {membership.member.phone && <p><strong>Phone:</strong> {membership.member.phone}</p>}
+              <div className="space-y-2">
+                {membership.member.email && (
+                  <p>
+                    <span className="font-medium">Email:</span>{" "}
+                    {membership.member.email}
+                  </p>
+                )}
+                {membership.member.phone && (
+                  <p>
+                    <span className="font-medium">Phone:</span>{" "}
+                    {membership.member.phone}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -204,38 +259,44 @@ const PaymentSchedulePage = () => {
       </Card>
 
       {/* Payment Summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardContent style={{ padding: "1.5rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <DollarSign className="h-5 w-5 text-blue-600" />
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <DollarSign className="h-6 w-6 text-blue-600" />
               <div>
-                <p style={{ fontSize: "0.875rem", color: "#666" }}>Total Amount</p>
-                <p style={{ fontSize: "1.5rem", fontWeight: "bold" }}>₹{calculateTotalAmount().toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Total Amount</p>
+                <p className="text-2xl font-bold">
+                  ₹{calculateTotalAmount().toLocaleString()}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardContent style={{ padding: "1.5rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <CreditCard className="h-5 w-5 text-orange-600" />
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <CreditCard className="h-6 w-6 text-orange-600" />
               <div>
-                <p style={{ fontSize: "0.875rem", color: "#666" }}>Pending Amount</p>
-                <p style={{ fontSize: "1.5rem", fontWeight: "bold" }}>₹{calculatePendingAmount().toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Pending Amount</p>
+                <p className="text-2xl font-bold">
+                  ₹{calculatePendingAmount().toLocaleString()}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardContent style={{ padding: "1.5rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Calendar className="h-5 w-5 text-green-600" />
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <Calendar className="h-6 w-6 text-green-600" />
               <div>
-                <p style={{ fontSize: "0.875rem", color: "#666" }}>Total Plans</p>
-                <p style={{ fontSize: "1.5rem", fontWeight: "bold" }}>{membership.member.feePlans.length}</p>
+                <p className="text-sm text-muted-foreground">Total Plans</p>
+                <p className="text-2xl font-bold">
+                  {membership.member.feePlans.length}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -252,61 +313,78 @@ const PaymentSchedulePage = () => {
         </CardHeader>
         <CardContent>
           {sortedFeePlans.length === 0 ? (
-            <p style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
+            <div className="text-center py-12 text-muted-foreground">
               No fee plans found for this membership.
-            </p>
+            </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div className="space-y-4">
               {sortedFeePlans.map((plan) => {
                 const dueDate = new Date(plan.dueDate);
-                const isOverdue = dueDate < new Date() && plan.status !== "PAID" && !plan.isOfflinePaid;
-                
+                const isOverdue =
+                  dueDate < new Date() &&
+                  plan.status !== "PAID" &&
+                  !plan.isOfflinePaid;
+
                 return (
-                  <div
+                  <Card
                     key={plan.id}
-                    style={{
-                      border: `1px solid ${isOverdue ? "#ef4444" : "#e5e7eb"}`,
-                      borderRadius: "0.5rem",
-                      padding: "1rem",
-                      backgroundColor: isOverdue ? "#fef2f2" : "white",
-                    }}
+                    className={`transition-colors ${
+                      isOverdue
+                        ? "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950"
+                        : ""
+                    }`}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
-                      <div>
-                        <h3 style={{ fontWeight: "600", marginBottom: "0.25rem" }}>
-                          {plan.name}
-                        </h3>
-                        {plan.description && (
-                          <p style={{ fontSize: "0.875rem", color: "#666", marginBottom: "0.5rem" }}>
-                            {plan.description}
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="space-y-1">
+                          <h3 className="font-semibold text-lg">{plan.name}</h3>
+                          {plan.description && (
+                            <p className="text-sm text-muted-foreground">
+                              {plan.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          {getStatusBadge(plan.status, plan.isOfflinePaid)}
+                          <Badge
+                            variant="outline"
+                            className="text-lg font-bold px-3 py-1"
+                          >
+                            ₹{Number(plan.amount).toLocaleString()}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p>
+                            <span className="font-medium">Due:</span>{" "}
+                            {dueDate.toLocaleDateString()}
                           </p>
+                          <p>
+                            <span className="font-medium">Created:</span>{" "}
+                            {new Date(plan.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+
+                        {plan.status !== "PAID" && !plan.isOfflinePaid && (
+                          <Button
+                            disabled={payingFeePlanId === plan.id}
+                            variant={isOverdue ? "destructive" : "default"}
+                            className="min-w-[100px]"
+                            asChild
+                          >
+                            <Link
+                              href={`/${SLUGS.CONSUMER}/pay?feePlanId=${plan.id}`}
+                            >
+                              <CreditCard className="mr-2 h-4 w-4" />
+                              "Pay Now"
+                            </Link>
+                          </Button>
                         )}
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        {getStatusBadge(plan.status, plan.isOfflinePaid)}
-                        <span style={{ fontSize: "1.25rem", fontWeight: "bold" }}>
-                          ₹{Number(plan.amount).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div style={{ fontSize: "0.875rem", color: "#666" }}>
-                        <p>Due: {dueDate.toLocaleDateString()}</p>
-                        <p>Created: {new Date(plan.createdAt).toLocaleDateString()}</p>
-                      </div>
-                      
-                      {plan.status !== "PAID" && !plan.isOfflinePaid && (
-                        <Button
-                          onClick={() => handlePayment(plan.id)}
-                          disabled={payingFeePlanId === plan.id}
-                          variant={isOverdue ? "destructive" : "default"}
-                        >
-                          {payingFeePlanId === plan.id ? "Processing..." : "Pay Now"}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
