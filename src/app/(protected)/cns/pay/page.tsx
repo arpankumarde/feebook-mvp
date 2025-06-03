@@ -3,23 +3,16 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useConsumerAuth } from "@/hooks/use-consumer-auth";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import cashfree from "@/lib/cfpg_client";
 import { OrderEntity } from "cashfree-pg";
-import { ArrowLeft, Calendar, CreditCard, User, Building } from "lucide-react";
+import { Calendar, CreditCard, User, Building } from "lucide-react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SLUGS } from "@/constants/slugs";
 

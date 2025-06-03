@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SLUGS } from "@/constants/slugs";
+import ConsumerTopbar from "@/components/layout/consumer/ConsumerTopbar";
 
 interface Provider {
   id: string;
@@ -158,150 +159,166 @@ const LinkMembership = () => {
   };
 
   return (
-    <div>
-      <h2>Link New Membership</h2>
+    <>
+      <ConsumerTopbar>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+          <h1 className="text-xl sm:text-2xl font-semibold">Memberships</h1>
+          <span className="text-2xl text-muted-foreground hidden sm:inline">
+            |
+          </span>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Manage your memberships here.
+          </p>
+        </div>
+      </ConsumerTopbar>
 
-      {error && (
-        <div style={{ color: "red", marginBottom: "1rem" }}>Error: {error}</div>
-      )}
+      <div className="p-2 sm:p-4">
+        <h2>Link New Membership</h2>
 
-      {success && (
-        <div style={{ color: "green", marginBottom: "1rem" }}>{success}</div>
-      )}
+        {error && (
+          <div style={{ color: "red", marginBottom: "1rem" }}>
+            Error: {error}
+          </div>
+        )}
 
-      {step === 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Step 1: Find Your Organization</CardTitle>
-            <CardDescription>
-              Enter the organization code provided by your institution
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div style={{ marginBottom: "1rem" }}>
-              <Label htmlFor="providerCode">Organization Code</Label>
-              <Input
-                id="providerCode"
-                value={providerCode}
-                onChange={(e) => setProviderCode(e.target.value)}
-                placeholder="Enter organization code"
-              />
-            </div>
-            <Button onClick={searchProvider} disabled={loading}>
-              {loading ? "Searching..." : "Search Organization"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+        {success && (
+          <div style={{ color: "green", marginBottom: "1rem" }}>{success}</div>
+        )}
 
-      {step === 2 && provider && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Step 2: Enter Your Member ID</CardTitle>
-            <CardDescription>
-              Organization: {provider.name} | Category: {provider.category}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div style={{ marginBottom: "1rem" }}>
-              <Label htmlFor="memberUniqueId">Your Member ID</Label>
-              <Input
-                id="memberUniqueId"
-                value={memberUniqueId}
-                onChange={(e) => setMemberUniqueId(e.target.value)}
-                placeholder="Enter your member ID"
-              />
-            </div>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <Button variant="outline" onClick={() => setStep(1)}>
-                Back
-              </Button>
-              <Button onClick={searchMember} disabled={loading}>
-                {loading ? "Verifying..." : "Verify Member"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {step === 3 && member && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Step 3: Confirm Membership</CardTitle>
-            <CardDescription>
-              Please verify your information is correct
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div style={{ marginBottom: "1rem" }}>
-              <p>
-                <strong>Name:</strong> {member.firstName} {member.middleName}{" "}
-                {member.lastName}
-              </p>
-              <p>
-                <strong>Member ID:</strong> {member.uniqueId}
-              </p>
-              <p>
-                <strong>Organization:</strong> {provider?.name}
-              </p>
-              {member.email && (
-                <p>
-                  <strong>Email:</strong> {member.email}
-                </p>
-              )}
-              {member.phone && (
-                <p>
-                  <strong>Phone:</strong> {member.phone}
-                </p>
-              )}
-              {member.category && (
-                <p>
-                  <strong>Category:</strong> {member.category}
-                </p>
-              )}
-              {member.subcategory && (
-                <p>
-                  <strong>Subcategory:</strong> {member.subcategory}
-                </p>
-              )}
-            </div>
-
-            {feePlans.length > 0 && (
+        {step === 1 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Step 1: Find Your Organization</CardTitle>
+              <CardDescription>
+                Enter the organization code provided by your institution
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <div style={{ marginBottom: "1rem" }}>
-                <h4>Pending Fee Plans ({feePlans.length})</h4>
-                {feePlans.map((plan) => (
-                  <div
-                    key={plan.id}
-                    style={{
-                      border: "1px solid #eee",
-                      padding: "0.5rem",
-                      margin: "0.5rem 0",
-                    }}
-                  >
-                    <p>
-                      <strong>{plan.name}</strong> - ₹{plan.amount}
-                    </p>
-                    <p>Due: {new Date(plan.dueDate).toLocaleDateString()}</p>
-                  </div>
-                ))}
+                <Label htmlFor="providerCode">Organization Code</Label>
+                <Input
+                  id="providerCode"
+                  value={providerCode}
+                  onChange={(e) => setProviderCode(e.target.value)}
+                  placeholder="Enter organization code"
+                />
               </div>
-            )}
+              <Button onClick={searchProvider} disabled={loading}>
+                {loading ? "Searching..." : "Search Organization"}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <Button variant="outline" onClick={() => setStep(2)}>
-                Back
-              </Button>
-              <Button onClick={claimMembershipAction} disabled={loading}>
-                {loading ? "Claiming..." : "Claim Membership"}
-              </Button>
-              <Button variant="destructive" onClick={resetForm}>
-                Start Over
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+        {step === 2 && provider && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Step 2: Enter Your Member ID</CardTitle>
+              <CardDescription>
+                Organization: {provider.name} | Category: {provider.category}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div style={{ marginBottom: "1rem" }}>
+                <Label htmlFor="memberUniqueId">Your Member ID</Label>
+                <Input
+                  id="memberUniqueId"
+                  value={memberUniqueId}
+                  onChange={(e) => setMemberUniqueId(e.target.value)}
+                  placeholder="Enter your member ID"
+                />
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  Back
+                </Button>
+                <Button onClick={searchMember} disabled={loading}>
+                  {loading ? "Verifying..." : "Verify Member"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 3 && member && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Step 3: Confirm Membership</CardTitle>
+              <CardDescription>
+                Please verify your information is correct
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div style={{ marginBottom: "1rem" }}>
+                <p>
+                  <strong>Name:</strong> {member.firstName} {member.middleName}{" "}
+                  {member.lastName}
+                </p>
+                <p>
+                  <strong>Member ID:</strong> {member.uniqueId}
+                </p>
+                <p>
+                  <strong>Organization:</strong> {provider?.name}
+                </p>
+                {member.email && (
+                  <p>
+                    <strong>Email:</strong> {member.email}
+                  </p>
+                )}
+                {member.phone && (
+                  <p>
+                    <strong>Phone:</strong> {member.phone}
+                  </p>
+                )}
+                {member.category && (
+                  <p>
+                    <strong>Category:</strong> {member.category}
+                  </p>
+                )}
+                {member.subcategory && (
+                  <p>
+                    <strong>Subcategory:</strong> {member.subcategory}
+                  </p>
+                )}
+              </div>
+
+              {feePlans.length > 0 && (
+                <div style={{ marginBottom: "1rem" }}>
+                  <h4>Pending Fee Plans ({feePlans.length})</h4>
+                  {feePlans.map((plan) => (
+                    <div
+                      key={plan.id}
+                      style={{
+                        border: "1px solid #eee",
+                        padding: "0.5rem",
+                        margin: "0.5rem 0",
+                      }}
+                    >
+                      <p>
+                        <strong>{plan.name}</strong> - ₹{plan.amount}
+                      </p>
+                      <p>Due: {new Date(plan.dueDate).toLocaleDateString()}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <Button variant="outline" onClick={() => setStep(2)}>
+                  Back
+                </Button>
+                <Button onClick={claimMembershipAction} disabled={loading}>
+                  {loading ? "Claiming..." : "Claim Membership"}
+                </Button>
+                <Button variant="destructive" onClick={resetForm}>
+                  Start Over
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </>
   );
 };
 

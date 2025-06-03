@@ -7,9 +7,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useProviderAuth } from "@/hooks/use-provider-auth";
 import { SLUGS } from "@/constants/slugs";
+import ProviderTopbar from "@/components/layout/provider/ProviderTopbar";
 
 const Page = () => {
-  const { provider } = useProviderAuth();
+  const { provider, loading: isAuthLoading } = useProviderAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +18,7 @@ const Page = () => {
   const providerId = provider?.id || null;
 
   useEffect(() => {
+    if (isAuthLoading) return;
     const fetchFeePlans = async () => {
       try {
         if (!providerId) {
@@ -38,99 +40,113 @@ const Page = () => {
     };
 
     fetchFeePlans();
-  }, [providerId]);
+  }, [providerId, isAuthLoading]);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Members</h1>
-
-      <div className="mt-4 flex justify-end">
-        <Button asChild>
-          <Link href={`/${SLUGS.PROVIDER}/members/add`}>Add Member</Link>
-        </Button>
-      </div>
-
-      {loading && <p>Loading fee plans...</p>}
-      {error && <p className="text-red-500">{error}</p>}
-
-      {!loading && !error && (
-        <div className="mt-4">
-          <h2 className="text-xl font-semibold">Enrolled Members</h2>
-          {members.length === 0 ? (
-            <p>No members found. Please add a member first.</p>
-          ) : (
-            <div className="mt-4 overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Name
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Category/Subcategory
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Phone
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {members.map((member) => (
-                    <tr key={member.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {member.firstName} {member.middleName} {member.lastName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {member.category || "N/A"}/{member.subcategory || "N/A"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {member.phone || "N/A"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mr-2"
-                          asChild
-                        >
-                          <Link
-                            href={`/${SLUGS.PROVIDER}/members/edit/${member.id}`}
-                          >
-                            Edit
-                          </Link>
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Link
-                            href={`/${SLUGS.PROVIDER}/members/view/${member.id}`}
-                          >
-                            View
-                          </Link>
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+    <>
+      <ProviderTopbar>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+          <h1 className="text-xl sm:text-2xl font-semibold">Members</h1>
+          <span className="text-2xl text-muted-foreground hidden sm:inline">
+            |
+          </span>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Manage your institution{`'`}s members here.
+          </p>
         </div>
-      )}
-    </div>
+      </ProviderTopbar>
+
+      <div className="p-2 sm:p-4">
+        <div className="flex justify-end">
+          <Button asChild>
+            <Link href={`/${SLUGS.PROVIDER}/members/add`}>Add Member</Link>
+          </Button>
+        </div>
+
+        {loading && <p>Loading fee plans...</p>}
+        {error && <p className="text-red-500">{error}</p>}
+
+        {!loading && !error && (
+          <div className="mt-4">
+            <h2 className="text-xl font-semibold">Enrolled Members</h2>
+            {members.length === 0 ? (
+              <p>No members found. Please add a member first.</p>
+            ) : (
+              <div className="mt-4 overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Name
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Category
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Phone
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {members.map((member) => (
+                      <tr key={member.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {member.firstName} {member.middleName}{" "}
+                          {member.lastName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {member.category || "N/A"}/
+                          {member.subcategory || "N/A"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {member.phone || "N/A"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mr-2"
+                            asChild
+                          >
+                            <Link
+                              href={`/${SLUGS.PROVIDER}/members/edit/${member.id}`}
+                            >
+                              Edit
+                            </Link>
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Link
+                              href={`/${SLUGS.PROVIDER}/members/view/${member.id}`}
+                            >
+                              View
+                            </Link>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 

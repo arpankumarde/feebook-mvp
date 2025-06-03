@@ -1,19 +1,19 @@
-import ProviderTopbar from "@/components/layout/provider/ProviderTopbar";
+import ConsumerTopbar from "@/components/layout/consumer/ConsumerTopbar";
 
 const Page = () => {
   return (
     <>
-      <ProviderTopbar>
+      <ConsumerTopbar>
         <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-          <h1 className="text-xl sm:text-2xl font-semibold">Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">Profile</h1>
           <span className="text-2xl text-muted-foreground hidden sm:inline">
             |
           </span>
           <p className="text-muted-foreground text-sm sm:text-base">
-            Manage your institution's dashboard here.
+            Manage your profile here.
           </p>
         </div>
-      </ProviderTopbar>
+      </ConsumerTopbar>
 
       <div className="p-2 sm:p-4">
         <p className="text-muted-foreground">Under Construction</p>

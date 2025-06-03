@@ -12,7 +12,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 import {
@@ -23,6 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { SLUGS } from "@/constants/slugs";
+import ConsumerTopbar from "@/components/layout/consumer/ConsumerTopbar";
 
 interface DetailedMembershipData {
   id: string;
@@ -184,214 +184,234 @@ const PaymentSchedulePage = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Button variant="outline" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
-      </div>
+    <>
+      <ConsumerTopbar>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+          <h1 className="text-xl sm:text-2xl font-semibold">Pay Schedules</h1>
+          <span className="text-2xl text-muted-foreground hidden sm:inline">
+            |
+          </span>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Manage your payment schedules here.
+          </p>
+        </div>
+      </ConsumerTopbar>
 
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Payment Schedule</h1>
-        <p className="text-muted-foreground">
-          View and manage payment schedules for your membership
-        </p>
-      </div>
+      <div className="space-y-6">
+        <div>
+          <Button variant="outline" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </div>
 
-      {/* Membership Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{memberName}</CardTitle>
-          <CardDescription>
-            {membership.member.provider.name} | Member ID:{" "}
-            {membership.member.uniqueId}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <p>
-                <span className="font-medium">Organization:</span>{" "}
-                {membership.member.provider.name}
-              </p>
-              <p>
-                <span className="font-medium">Category:</span>{" "}
-                {membership.member.provider.category}
-              </p>
-              <p>
-                <span className="font-medium">Type:</span>{" "}
-                {membership.member.provider.type}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p>
-                <span className="font-medium">Member Category:</span>{" "}
-                {membership.member.category || "N/A"}
-              </p>
-              <p>
-                <span className="font-medium">Subcategory:</span>{" "}
-                {membership.member.subcategory || "N/A"}
-              </p>
-              <p>
-                <span className="font-medium">Claimed:</span>{" "}
-                {new Date(membership.claimedAt).toLocaleDateString()}
-              </p>
-            </div>
-            {(membership.member.email || membership.member.phone) && (
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Payment Schedule
+          </h1>
+          <p className="text-muted-foreground">
+            View and manage payment schedules for your membership
+          </p>
+        </div>
+
+        {/* Membership Overview */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{memberName}</CardTitle>
+            <CardDescription>
+              {membership.member.provider.name} | Member ID:{" "}
+              {membership.member.uniqueId}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="space-y-2">
-                {membership.member.email && (
-                  <p>
-                    <span className="font-medium">Email:</span>{" "}
-                    {membership.member.email}
+                <p>
+                  <span className="font-medium">Organization:</span>{" "}
+                  {membership.member.provider.name}
+                </p>
+                <p>
+                  <span className="font-medium">Category:</span>{" "}
+                  {membership.member.provider.category}
+                </p>
+                <p>
+                  <span className="font-medium">Type:</span>{" "}
+                  {membership.member.provider.type}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p>
+                  <span className="font-medium">Member Category:</span>{" "}
+                  {membership.member.category || "N/A"}
+                </p>
+                <p>
+                  <span className="font-medium">Subcategory:</span>{" "}
+                  {membership.member.subcategory || "N/A"}
+                </p>
+                <p>
+                  <span className="font-medium">Claimed:</span>{" "}
+                  {new Date(membership.claimedAt).toLocaleDateString()}
+                </p>
+              </div>
+              {(membership.member.email || membership.member.phone) && (
+                <div className="space-y-2">
+                  {membership.member.email && (
+                    <p>
+                      <span className="font-medium">Email:</span>{" "}
+                      {membership.member.email}
+                    </p>
+                  )}
+                  {membership.member.phone && (
+                    <p>
+                      <span className="font-medium">Phone:</span>{" "}
+                      {membership.member.phone}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Payment Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <DollarSign className="h-6 w-6 text-blue-600" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Amount</p>
+                  <p className="text-2xl font-bold">
+                    ₹{calculateTotalAmount().toLocaleString()}
                   </p>
-                )}
-                {membership.member.phone && (
-                  <p>
-                    <span className="font-medium">Phone:</span>{" "}
-                    {membership.member.phone}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <CreditCard className="h-6 w-6 text-orange-600" />
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Pending Amount
                   </p>
-                )}
+                  <p className="text-2xl font-bold">
+                    ₹{calculatePendingAmount().toLocaleString()}
+                  </p>
+                </div>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      {/* Payment Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <Calendar className="h-6 w-6 text-green-600" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Plans</p>
+                  <p className="text-2xl font-bold">
+                    {membership.member.feePlans.length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Fee Plans List */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3">
-              <DollarSign className="h-6 w-6 text-blue-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">Total Amount</p>
-                <p className="text-2xl font-bold">
-                  ₹{calculateTotalAmount().toLocaleString()}
-                </p>
+          <CardHeader>
+            <CardTitle>Fee Plans</CardTitle>
+            <CardDescription>
+              All fee plans for this membership sorted by due date
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {sortedFeePlans.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                No fee plans found for this membership.
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            ) : (
+              <div className="space-y-4">
+                {sortedFeePlans.map((plan) => {
+                  const dueDate = new Date(plan.dueDate);
+                  const isOverdue =
+                    dueDate < new Date() &&
+                    plan.status !== "PAID" &&
+                    !plan.isOfflinePaid;
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3">
-              <CreditCard className="h-6 w-6 text-orange-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">Pending Amount</p>
-                <p className="text-2xl font-bold">
-                  ₹{calculatePendingAmount().toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                  return (
+                    <Card
+                      key={plan.id}
+                      className={`transition-colors ${
+                        isOverdue
+                          ? "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950"
+                          : ""
+                      }`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="space-y-1">
+                            <h3 className="font-semibold text-lg">
+                              {plan.name}
+                            </h3>
+                            {plan.description && (
+                              <p className="text-sm text-muted-foreground">
+                                {plan.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            {getStatusBadge(plan.status, plan.isOfflinePaid)}
+                            <Badge
+                              variant="outline"
+                              className="text-lg font-bold px-3 py-1"
+                            >
+                              ₹{Number(plan.amount).toLocaleString()}
+                            </Badge>
+                          </div>
+                        </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3">
-              <Calendar className="h-6 w-6 text-green-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">Total Plans</p>
-                <p className="text-2xl font-bold">
-                  {membership.member.feePlans.length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Fee Plans List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Fee Plans</CardTitle>
-          <CardDescription>
-            All fee plans for this membership sorted by due date
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {sortedFeePlans.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              No fee plans found for this membership.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {sortedFeePlans.map((plan) => {
-                const dueDate = new Date(plan.dueDate);
-                const isOverdue =
-                  dueDate < new Date() &&
-                  plan.status !== "PAID" &&
-                  !plan.isOfflinePaid;
-
-                return (
-                  <Card
-                    key={plan.id}
-                    className={`transition-colors ${
-                      isOverdue
-                        ? "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950"
-                        : ""
-                    }`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="space-y-1">
-                          <h3 className="font-semibold text-lg">{plan.name}</h3>
-                          {plan.description && (
-                            <p className="text-sm text-muted-foreground">
-                              {plan.description}
+                        <div className="flex justify-between items-center">
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            <p>
+                              <span className="font-medium">Due:</span>{" "}
+                              {dueDate.toLocaleDateString()}
                             </p>
+                            <p>
+                              <span className="font-medium">Created:</span>{" "}
+                              {new Date(plan.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+
+                          {plan.status !== "PAID" && !plan.isOfflinePaid && (
+                            <Button
+                              disabled={payingFeePlanId === plan.id}
+                              variant={isOverdue ? "destructive" : "default"}
+                              className="min-w-[100px]"
+                              asChild
+                            >
+                              <Link
+                                href={`/${SLUGS.CONSUMER}/pay?feePlanId=${plan.id}`}
+                              >
+                                <CreditCard className="mr-2 h-4 w-4" />
+                                "Pay Now"
+                              </Link>
+                            </Button>
                           )}
                         </div>
-                        <div className="flex items-center space-x-3">
-                          {getStatusBadge(plan.status, plan.isOfflinePaid)}
-                          <Badge
-                            variant="outline"
-                            className="text-lg font-bold px-3 py-1"
-                          >
-                            ₹{Number(plan.amount).toLocaleString()}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          <p>
-                            <span className="font-medium">Due:</span>{" "}
-                            {dueDate.toLocaleDateString()}
-                          </p>
-                          <p>
-                            <span className="font-medium">Created:</span>{" "}
-                            {new Date(plan.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-
-                        {plan.status !== "PAID" && !plan.isOfflinePaid && (
-                          <Button
-                            disabled={payingFeePlanId === plan.id}
-                            variant={isOverdue ? "destructive" : "default"}
-                            className="min-w-[100px]"
-                            asChild
-                          >
-                            <Link
-                              href={`/${SLUGS.CONSUMER}/pay?feePlanId=${plan.id}`}
-                            >
-                              <CreditCard className="mr-2 h-4 w-4" />
-                              "Pay Now"
-                            </Link>
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 };
 

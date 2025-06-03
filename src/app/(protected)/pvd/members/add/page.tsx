@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProviderAuth } from "@/hooks/use-provider-auth";
+import ProviderTopbar from "@/components/layout/provider/ProviderTopbar";
 
 interface MemberFormData {
   firstName: string;
@@ -37,7 +38,7 @@ interface ApiErrorResponse {
 }
 
 const Page = () => {
-  const { provider } = useProviderAuth();
+  const { provider, loading: isAuthLoading } = useProviderAuth();
   const [formData, setFormData] = useState<MemberFormData>({
     firstName: "",
     middleName: "",
@@ -100,169 +101,182 @@ const Page = () => {
   };
 
   useEffect(() => {
+    if (isAuthLoading) return;
     if (!provider?.id) {
       setError("Provider information not found");
       return;
     }
 
     setFormData((prev) => ({ ...prev, providerId: provider?.id }));
-  }, [provider?.id]);
+  }, [provider?.id, isAuthLoading]);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Add Member</h1>
-
-      {error && <p>{error}</p>}
-      {success && <p>Member added successfully!</p>}
-
-      <form onSubmit={handleSubmit}>
-        <div>
-          <Label htmlFor="firstName">First Name*</Label>
-          <Input
-            id="firstName"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            required
-          />
+    <>
+      <ProviderTopbar>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+          <h1 className="text-xl sm:text-2xl font-semibold">Add Member</h1>
+          <span className="text-2xl text-muted-foreground hidden sm:inline">
+            |
+          </span>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Add members to your institution.
+          </p>
         </div>
+      </ProviderTopbar>
 
-        <div>
-          <Label htmlFor="middleName">Middle Name</Label>
-          <Input
-            id="middleName"
-            name="middleName"
-            value={formData.middleName}
-            onChange={handleChange}
-          />
-        </div>
+      <div className="p-2 sm:p-4">
+        {error && <p>{error}</p>}
+        {success && <p>Member added successfully!</p>}
 
-        <div>
-          <Label htmlFor="lastName">Last Name*</Label>
-          <Input
-            id="lastName"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            required
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div>
+            <Label htmlFor="firstName">First Name*</Label>
+            <Input
+              id="firstName"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="dateOfBirth">Date of Birth</Label>
-          <Input
-            id="dateOfBirth"
-            name="dateOfBirth"
-            type="date"
-            value={formData.dateOfBirth}
-            onChange={handleChange}
-          />
-        </div>
+          <div>
+            <Label htmlFor="middleName">Middle Name</Label>
+            <Input
+              id="middleName"
+              name="middleName"
+              value={formData.middleName}
+              onChange={handleChange}
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="gender">Gender</Label>
-          <Select
-            name="gender"
-            value={formData.gender}
-            onValueChange={(value) =>
-              setFormData((prev) => ({ ...prev, gender: value }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Gender" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={Gender.MALE}>{Gender.MALE}</SelectItem>
-              <SelectItem value={Gender.FEMALE}>{Gender.FEMALE}</SelectItem>
-              <SelectItem value={Gender.OTHER}>{Gender.OTHER}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          <div>
+            <Label htmlFor="lastName">Last Name*</Label>
+            <Input
+              id="lastName"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="UniqueId">Unique ID*</Label>
-          <Input
-            id="uniqueId"
-            name="uniqueId"
-            value={formData.uniqueId}
-            onChange={handleChange}
-            required
-          />
-        </div>
+          <div>
+            <Label htmlFor="dateOfBirth">Date of Birth</Label>
+            <Input
+              id="dateOfBirth"
+              name="dateOfBirth"
+              type="date"
+              value={formData.dateOfBirth}
+              onChange={handleChange}
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="phone">Phone*</Label>
-          <Input
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="Phone (10 digits)"
-            type="tel"
-            pattern="[0-9]{10}"
-            minLength={10}
-            maxLength={10}
-            title="Please enter exactly 10 digits"
-            required
-          />
-        </div>
+          <div>
+            <Label htmlFor="gender">Gender</Label>
+            <Select
+              name="gender"
+              value={formData.gender}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, gender: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={Gender.MALE}>{Gender.MALE}</SelectItem>
+                <SelectItem value={Gender.FEMALE}>{Gender.FEMALE}</SelectItem>
+                <SelectItem value={Gender.OTHER}>{Gender.OTHER}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-          />
-        </div>
+          <div>
+            <Label htmlFor="UniqueId">Unique ID*</Label>
+            <Input
+              id="uniqueId"
+              name="uniqueId"
+              value={formData.uniqueId}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="category">Category</Label>
-          <Input
-            id="category"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-          />
-        </div>
+          <div>
+            <Label htmlFor="phone">Phone*</Label>
+            <Input
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Phone (10 digits)"
+              type="tel"
+              pattern="[0-9]{10}"
+              minLength={10}
+              maxLength={10}
+              title="Please enter exactly 10 digits"
+              required
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="subcategory">Subcategory</Label>
-          <Input
-            id="subcategory"
-            name="subcategory"
-            value={formData.subcategory}
-            onChange={handleChange}
-          />
-        </div>
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="guardianName">Guardian Name</Label>
-          <Input
-            id="guardianName"
-            name="guardianName"
-            value={formData.guardianName}
-            onChange={handleChange}
-          />
-        </div>
+          <div>
+            <Label htmlFor="category">Category</Label>
+            <Input
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="relationship">Relationship</Label>
-          <Input
-            id="relationship"
-            name="relationship"
-            value={formData.relationship}
-            onChange={handleChange}
-          />
-        </div>
+          <div>
+            <Label htmlFor="subcategory">Subcategory</Label>
+            <Input
+              id="subcategory"
+              name="subcategory"
+              value={formData.subcategory}
+              onChange={handleChange}
+            />
+          </div>
 
-        <Button type="submit" disabled={loading}>
-          {loading ? "Adding..." : "Add Member"}
-        </Button>
-      </form>
-    </div>
+          <div>
+            <Label htmlFor="guardianName">Guardian Name</Label>
+            <Input
+              id="guardianName"
+              name="guardianName"
+              value={formData.guardianName}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="relationship">Relationship</Label>
+            <Input
+              id="relationship"
+              name="relationship"
+              value={formData.relationship}
+              onChange={handleChange}
+            />
+          </div>
+
+          <Button type="submit" disabled={loading}>
+            {loading ? "Adding..." : "Add Member"}
+          </Button>
+        </form>
+      </div>
+    </>
   );
 };
 
