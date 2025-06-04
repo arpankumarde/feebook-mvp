@@ -21,6 +21,22 @@ export async function POST(request: NextRequest) {
     // Check if provider exists
     const existingProvider = await db.provider.findUnique({
       where: { email },
+      select: {
+        id: true,
+        name: true,
+        adminName: true,
+        email: true,
+        phone: true,
+        type: true,
+        category: true,
+        status: true,
+        code: true,
+        isVerified: true,
+        walletBalance: true,
+        password: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     if (!existingProvider) {
@@ -34,6 +50,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify password
     const isPasswordValid = await bcrypt.compare(
       password,
       existingProvider.password
@@ -50,13 +67,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      { success: true, user: existingProvider, message: "Login successful" },
+    // Remove password from response
+    const { password: _, ...providerData } = existingProvider;
+
+    const response = NextResponse.json(
+      {
+        success: true,
+        user: providerData,
+        message: "Login successful",
+      },
       { status: 200 }
     );
+
+    return response;
   } catch (error) {
+    console.error("Provider login error:", error);
     return NextResponse.json(
-      { success: false, error, message: "An error occurred during login" },
+      {
+        success: false,
+        error: "An error occurred during login",
+        message: "An error occurred during login",
+      },
       { status: 500 }
     );
   }
