@@ -1,6 +1,14 @@
+"use client";
+
 import ProviderTopbar from "@/components/layout/provider/ProviderTopbar";
+import { Button } from "@/components/ui/button";
+import { useProviderAuth } from "@/hooks/use-provider-auth";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
 
 const Page = () => {
+  const { provider } = useProviderAuth();
+
   return (
     <>
       <ProviderTopbar>
@@ -16,6 +24,19 @@ const Page = () => {
       </ProviderTopbar>
 
       <div className="p-2 sm:p-4">
+        {!provider?.isVerified && (
+          <div className="mb-4 p-4 bg-primary text-white rounded-xl">
+            <p className="text-white">
+              Your organization is not verified yet. Please complete KYC to
+              access all features.
+            </p>
+            <Button asChild variant="secondary" className="mt-2">
+              <Link href={`/pvd/kyc`} prefetch={false}>
+                Proceed to KYC <ArrowRightIcon />
+              </Link>
+            </Button>
+          </div>
+        )}
         <p className="text-muted-foreground">Under Construction</p>
       </div>
     </>

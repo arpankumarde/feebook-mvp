@@ -1,22 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AuthService } from "@/lib/auth-service";
 import { Provider } from "@prisma/client";
+import { SLUGS } from "@/constants/slugs";
 
 export function useProviderAuth() {
   const [provider, setProvider] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const checkAuth = () => {
       const providerData = AuthService.getProviderAuth();
       setProvider(providerData);
       setLoading(false);
+
+      // Redirect if provider is not verified
+      if (providerData && !providerData.isVerified) {
+        router.push(`/${SLUGS.PROVIDER}/dashboard`);
+      }
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
   return {
     provider,

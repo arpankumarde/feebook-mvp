@@ -22,7 +22,7 @@ import { Separator } from "../../ui/separator";
 import { useProviderAuth } from "@/hooks/use-provider-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { SignOutIcon } from "@phosphor-icons/react/dist/ssr";
+import { LockIcon, SignOutIcon } from "@phosphor-icons/react/dist/ssr";
 import { deleteCookie } from "cookies-next/client";
 import { COOKIES } from "@/constants/cookies";
 
@@ -87,12 +87,25 @@ export function ProviderSidebar() {
                       isActive={isActive(item.key)}
                     >
                       <Link
-                        href={`/${SLUGS.PROVIDER}/${item.key}`}
+                        href={
+                          provider?.isVerified
+                            ? `/${SLUGS.PROVIDER}/${item.key}`
+                            : "#"
+                        }
                         className="text-lg font-semibold text-gray-700"
                         onClick={() => setOpenMobile(false)}
                         draggable="false"
                       >
-                        <i className="size-6">{item.icon}</i>
+                        <i className="size-6">
+                          {provider?.isVerified || item.key === "dashboard" ? (
+                            item.icon
+                          ) : (
+                            <LockIcon
+                              className="text-primary h-full w-full"
+                              weight="duotone"
+                            />
+                          )}
+                        </i>
                         <span>{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
