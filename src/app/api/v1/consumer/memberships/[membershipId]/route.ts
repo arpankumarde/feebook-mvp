@@ -44,6 +44,7 @@ export async function GET(
                 description: true,
                 amount: true,
                 status: true,
+                receipt: true,
                 dueDate: true,
                 isOfflinePaid: true,
                 consumerClaimsPaid: true,

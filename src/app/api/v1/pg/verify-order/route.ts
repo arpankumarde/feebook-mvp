@@ -2,17 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import cashfree from "@/lib/cfpg_server";
 import db from "@/lib/db";
 import {
+  FeePlan,
+  Member,
   Order,
   OrderStatus,
   PaymentStatus,
   Prisma,
+  Provider,
   Transaction,
 } from "@prisma/client";
 import { PaymentEntity } from "cashfree-pg";
 import { AxiosResponse } from "axios";
+import ivSuite from "@/lib/invoiceSuite";
+import {
+  GenerateInvoiceDto,
+  GenerateInvoiceResponseDto,
+} from "@/types/invoiceSuite";
 
 interface ExtendedPayment extends PaymentEntity {
   payment_offers: Prisma.JsonValue[] | null;
+}
+
+export interface ExtendedOrder extends Order {
+  feePlan: FeePlan & {
+    provider: Provider;
+    member: Member;
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -22,7 +37,7 @@ export async function GET(request: NextRequest) {
   try {
     const { data: order } = await cashfree.PGFetchOrder(orderId);
 
-    let createdOrder: Order[];
+    let createdOrder: ExtendedOrder[];
     if (!order.order_status && !order?.order_tags?.feePlanId) {
       return NextResponse.json(order, { status: 500 });
     } else {
@@ -33,18 +48,26 @@ export async function GET(request: NextRequest) {
         data: {
           status: order.order_status as OrderStatus,
         },
+        include: {
+          feePlan: {
+            include: {
+              provider: true,
+              member: true,
+            },
+          },
+        },
       });
+    }
 
-      if ((order?.order_status as OrderStatus) === "PAID") {
-        await db.feePlan.update({
-          where: {
-            id: order?.order_tags?.feePlanId as string,
-          },
-          data: {
-            status: "PAID",
-          },
-        });
-      }
+    if ((order?.order_status as OrderStatus) === "PAID") {
+      await db.feePlan.update({
+        where: {
+          id: order?.order_tags?.feePlanId as string,
+        },
+        data: {
+          status: "PAID",
+        },
+      });
     }
 
     const { data: payments } = (await cashfree.PGOrderFetchPayments(
@@ -105,9 +128,58 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    if (!createdOrder[0]?.feePlan?.receipt) {
+      const ivSuiteProps: GenerateInvoiceDto = {
+        filename: `${order?.cf_order_id}-${payments[0]?.cf_payment_id}`,
+        p1: createdOrder[0].feePlan.provider.name,
+        p2: createdOrder[0].feePlan.provider.email,
+        p3: createdOrder[0].feePlan.provider.phone,
+        p4: `Code: ${createdOrder[0].feePlan.provider.code}`,
+        p5: order?.cf_order_id ?? "",
+        p6: payments[0]?.cf_payment_id ?? "",
+        p7: payments[0]?.payment_time
+          ? new Date(payments[0]?.payment_time).toDateString()
+          : "",
+        p8:
+          Object.keys(payments[0]?.payment_method || {})
+            .join(", ")
+            .toUpperCase() || "",
+        p9: `${createdOrder[0].feePlan.member.firstName} ${createdOrder[0].feePlan.member.lastName}`,
+        p10: createdOrder[0].feePlan.member.uniqueId,
+        p11: createdOrder[0].feePlan.member.category ?? "",
+        p12: createdOrder[0].feePlan.member.phone,
+        p13: createdOrder[0].feePlan.name,
+        p14: payments[0]?.order_amount?.toString() ?? "0",
+        note: order?.order_note,
+      };
+      try {
+        const { data } = await ivSuite.post<GenerateInvoiceResponseDto>(
+          "/pdf",
+          ivSuiteProps
+        );
+
+        if (data.success && data.url) {
+          await db.feePlan.update({
+            where: {
+              id: order?.order_tags?.feePlanId as string,
+            },
+            data: {
+              receipt: data.url,
+            },
+          });
+          createdOrder[0].feePlan.receipt = data.url;
+        } else {
+          console.error("Failed to generate invoice:", data.error);
+        }
+      } catch (error) {
+        console.error("Error generating invoice:", error);
+      }
+    }
+
     return NextResponse.json({
       order: createdOrder[0],
       payments: createdTransactions,
+      receipt: createdOrder[0]?.feePlan?.receipt || null,
     });
   } catch (error: any) {
     console.error("Error fetching order details:", error);

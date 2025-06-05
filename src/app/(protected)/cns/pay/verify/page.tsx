@@ -52,6 +52,7 @@ interface ExtendedPayment extends Omit<Transaction, "paymentMethod"> {
 interface APIResponse {
   order?: Order & { orderTags?: OrderTags };
   payments?: ExtendedPayment[];
+  receipt?: string | null;
 }
 
 const PaymentVerifyContent = () => {
@@ -63,6 +64,7 @@ const PaymentVerifyContent = () => {
   const [paymentData, setPaymentData] = useState<ExtendedPayment[] | null>(
     null
   );
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,6 +90,7 @@ const PaymentVerifyContent = () => {
         if (orderDetails) {
           setOrderData(orderDetails);
           setPaymentData(payments);
+          setReceiptUrl(data.receipt || null);
 
           // Show appropriate toast based on payment status
           switch (orderDetails.status) {
@@ -400,8 +403,12 @@ const PaymentVerifyContent = () => {
               variant="secondary"
               className="gap-2 flex-1"
               onClick={() => {
-                // TODO: Implement receipt download
-                toast.info("Receipt download will be available soon");
+                if (receiptUrl) {
+                  // Download receipt if available
+                  window.open(receiptUrl, "_blank");
+                } else {
+                  toast.info("Receipt download will be available soon");
+                }
               }}
             >
               <ReceiptIcon size={16} />

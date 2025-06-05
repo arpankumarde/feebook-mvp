@@ -503,12 +503,16 @@ const PaymentSchedulePage = () => {
 
                             {plan.status === "PAID" && !plan.isOfflinePaid && (
                               <div className="flex md:flex-col justify-between gap-2">
-                                <Button
-                                  className="bg-green-600 hover:bg-green-700"
-                                  size="sm"
-                                >
-                                  <Link href={`#`}>View Receipt</Link>
-                                </Button>
+                                {plan.receipt && (
+                                  <Button
+                                    className="bg-green-600 hover:bg-green-700"
+                                    size="sm"
+                                  >
+                                    <Link href={plan.receipt} target="_blank">
+                                      View Receipt
+                                    </Link>
+                                  </Button>
+                                )}
 
                                 <Button
                                   variant={"outline"}
