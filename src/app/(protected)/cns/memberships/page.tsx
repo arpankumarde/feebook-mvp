@@ -1,11 +1,8 @@
 "use client";
 
-import { useConsumerAuth } from "@/hooks/use-consumer-auth";
-import { useState } from "react";
-import api from "@/lib/api";
+import { useEffect, useState } from "react";
+import ConsumerTopbar from "@/components/layout/consumer/ConsumerTopbar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -13,313 +10,341 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { useConsumerAuth } from "@/hooks/use-consumer-auth";
+import api from "@/lib/api";
+import { Loader2, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { SLUGS } from "@/constants/slugs";
-import ConsumerTopbar from "@/components/layout/consumer/ConsumerTopbar";
+import Link from "next/link";
+import {
+  BarbellIcon,
+  BuildingOfficeIcon,
+  EyeIcon,
+  GraduationCapIcon,
+  PlusIcon,
+  StorefrontIcon,
+  UsersThreeIcon,
+} from "@phosphor-icons/react/dist/ssr";
+import { AccountCategory } from "@prisma/client";
 
-interface Provider {
+interface SimplifiedMembershipData {
   id: string;
-  name: string;
-  code: string;
-  type: string;
-  category: string;
+  claimedAt: string;
+  memberName: string;
+  memberUniqueId: string;
+  providerName: string;
+  providerCategory: AccountCategory;
+  pendingFeePlansCount: number;
+  hasOutstandingFees: boolean;
+  hasOverdueFees: boolean;
 }
 
-interface Member {
-  id: string;
-  uniqueId: string;
-  firstName: string;
-  middleName?: string;
-  lastName: string;
-  email?: string;
-  phone?: string;
-  category?: string;
-  subcategory?: string;
-}
-
-interface FeePlan {
-  id: string;
-  name: string;
-  description?: string;
-  amount: number;
-  status: string;
-  dueDate: string;
-}
-
-const LinkMembership = () => {
+const MembershipsPage = () => {
   const { consumer } = useConsumerAuth();
-  const [step, setStep] = useState(1);
-  const [providerCode, setProviderCode] = useState("");
-  const [memberUniqueId, setMemberUniqueId] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [memberships, setMemberships] = useState<SimplifiedMembershipData[]>(
+    []
+  );
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
-  const [provider, setProvider] = useState<Provider | null>(null);
-  const [member, setMember] = useState<Member | null>(null);
-  const [feePlans, setFeePlans] = useState<FeePlan[]>([]);
+  useEffect(() => {
+    const fetchMemberships = async () => {
+      if (!consumer?.id) {
+        setLoading(false);
+        return;
+      }
 
-  const searchProvider = async () => {
-    if (!providerCode.trim()) {
-      setError("Please enter a provider code");
-      return;
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await api.get(
+          "/api/v1/consumer/memberships/simplified",
+          {
+            params: {
+              consumerId: consumer.id,
+            },
+          }
+        );
+
+        const membershipData = response.data?.memberships || [];
+        setMemberships(Array.isArray(membershipData) ? membershipData : []);
+      } catch (err: any) {
+        console.error("Error fetching memberships:", err);
+        setError("Failed to load memberships");
+        setMemberships([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMemberships();
+  }, [consumer?.id]);
+
+  const getProviderCategoryIcon = (category: AccountCategory) => {
+    switch (category) {
+      case "EDUCATIONAL":
+      case "HIGHER_EDUCATION":
+        return <GraduationCapIcon size={30} weight="duotone" />;
+      case "COACHING":
+        return <UsersThreeIcon size={30} weight="duotone" />;
+      case "FITNESS_SPORTS":
+        return <BarbellIcon size={30} weight="duotone" />;
+      default:
+        return <StorefrontIcon size={30} weight="duotone" />;
     }
+  };
 
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await api.get(
-        `/api/v1/provider/by-code/${providerCode}`
+  const getStatusBadge = (
+    hasOutstandingFees: boolean,
+    hasOverdueFees: boolean,
+    pendingCount: number
+  ) => {
+    if (hasOverdueFees) {
+      return (
+        <Badge variant="destructive" className="gap-1">
+          <AlertCircle className="h-3 w-3" />
+          Overdue
+        </Badge>
       );
-
-      if (response.data.success) {
-        setProvider(response.data.data);
-        setStep(2);
-      } else {
-        setError("Provider not found");
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to find provider");
-    } finally {
-      setLoading(false);
     }
+    if (hasOutstandingFees) {
+      return (
+        <Badge variant="secondary" className="gap-1">
+          <Clock className="h-3 w-3" />
+          {pendingCount} Pending
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="default" className="gap-1 bg-green-600">
+        <CheckCircle2 className="h-3 w-3" />
+        All Paid
+      </Badge>
+    );
   };
 
-  const searchMember = async () => {
-    if (!memberUniqueId.trim()) {
-      setError("Please enter your member ID");
-      return;
-    }
+  if (loading) {
+    return (
+      <>
+        <ConsumerTopbar>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+            <h1 className="text-xl sm:text-2xl font-semibold">Memberships</h1>
+            <span className="text-2xl text-muted-foreground hidden sm:inline">
+              |
+            </span>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Manage your memberships here.
+            </p>
+          </div>
+        </ConsumerTopbar>
 
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await api.get("/api/v1/provider/member/by-uniqueid", {
-        params: {
-          providerId: provider?.id,
-          uniqueId: memberUniqueId,
-        },
-      });
-
-      setMember(response.data.member);
-      setFeePlans(response.data.feePlans || []);
-      setStep(3);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Member not found");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const claimMembershipAction = async () => {
-    if (!consumer?.id || !provider?.code || !memberUniqueId) {
-      setError("Missing required information");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await api.post("/api/v1/consumer/memberships", {
-        consumerId: consumer.id,
-        providerCode: provider.code,
-        memberUniqueId: memberUniqueId,
-      });
-
-      if (response.data.success) {
-        setSuccess("Membership claimed successfully!");
-        setTimeout(() => {
-          window.location.href = `/${SLUGS.CONSUMER}/dashboard`;
-        }, 2000);
-      } else {
-        setError(response.data.error || "Failed to claim membership");
-      }
-    } catch (err: any) {
-      if (err.response?.status === 409) {
-        setError("Membership already claimed");
-      } else {
-        setError(err.response?.data?.error || "Failed to claim membership");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetForm = () => {
-    setStep(1);
-    setProviderCode("");
-    setMemberUniqueId("");
-    setProvider(null);
-    setMember(null);
-    setFeePlans([]);
-    setError(null);
-    setSuccess(null);
-  };
+        <div className="p-4 flex items-center justify-center min-h-64">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-muted-foreground">
+              Loading your memberships...
+            </span>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <ConsumerTopbar>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-          <h1 className="text-xl sm:text-2xl font-semibold">Memberships</h1>
-          <span className="text-2xl text-muted-foreground hidden sm:inline">
-            |
-          </span>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Manage your memberships here.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+            <h1 className="text-xl sm:text-2xl font-semibold">Memberships</h1>
+            <span className="text-2xl text-muted-foreground hidden sm:inline">
+              |
+            </span>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Manage your memberships here.
+            </p>
+          </div>
+          <Button className="gap-2 hidden lg:inline-flex" asChild>
+            <Link href={`/${SLUGS.CONSUMER}/memberships/add`}>
+              <PlusIcon weight="bold" />
+              Add Membership
+            </Link>
+          </Button>
         </div>
       </ConsumerTopbar>
 
-      <div className="p-2 sm:p-4">
-        <h2>Link New Membership</h2>
-
+      <div className="p-4 space-y-6">
         {error && (
-          <div style={{ color: "red", marginBottom: "1rem" }}>
-            Error: {error}
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {memberships.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
+              <BuildingOfficeIcon
+                size={32}
+                weight="duotone"
+                className="h-12 w-12 text-primary"
+              />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No Memberships Found</h3>
+            <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+              You haven't linked any memberships yet. Start by adding your first
+              membership to manage fees and payments.
+            </p>
+            <Button className="gap-2" size="lg" asChild>
+              <Link href={`/${SLUGS.CONSUMER}/memberships/add`}>
+                <PlusIcon weight="bold" />
+                Add Your First Membership
+              </Link>
+            </Button>
           </div>
-        )}
-
-        {success && (
-          <div style={{ color: "green", marginBottom: "1rem" }}>{success}</div>
-        )}
-
-        {step === 1 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Step 1: Find Your Organization</CardTitle>
-              <CardDescription>
-                Enter the organization code provided by your institution
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div style={{ marginBottom: "1rem" }}>
-                <Label htmlFor="providerCode">Organization Code</Label>
-                <Input
-                  id="providerCode"
-                  value={providerCode}
-                  onChange={(e) => setProviderCode(e.target.value)}
-                  placeholder="Enter organization code"
-                />
+        ) : (
+          <>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-2">
+              <div className="text-center md:text-left">
+                <h2 className="text-lg font-semibold">Your Memberships</h2>
+                <p className="text-sm text-muted-foreground">
+                  {memberships.length} membership
+                  {memberships.length !== 1 ? "s" : ""} linked to your account
+                </p>
               </div>
-              <Button onClick={searchProvider} disabled={loading}>
-                {loading ? "Searching..." : "Search Organization"}
-              </Button>
-            </CardContent>
-          </Card>
-        )}
 
-        {step === 2 && provider && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Step 2: Enter Your Member ID</CardTitle>
-              <CardDescription>
-                Organization: {provider.name} | Category: {provider.category}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div style={{ marginBottom: "1rem" }}>
-                <Label htmlFor="memberUniqueId">Your Member ID</Label>
-                <Input
-                  id="memberUniqueId"
-                  value={memberUniqueId}
-                  onChange={(e) => setMemberUniqueId(e.target.value)}
-                  placeholder="Enter your member ID"
-                />
-              </div>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <Button variant="outline" onClick={() => setStep(1)}>
-                  Back
-                </Button>
-                <Button onClick={searchMember} disabled={loading}>
-                  {loading ? "Verifying..." : "Verify Member"}
+              <div>
+                <Button className="gap-2 md:hidden" asChild>
+                  <Link href={`/${SLUGS.CONSUMER}/memberships/add`}>
+                    <PlusIcon weight="bold" />
+                    Add Membership
+                  </Link>
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
 
-        {step === 3 && member && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Step 3: Confirm Membership</CardTitle>
-              <CardDescription>
-                Please verify your information is correct
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div style={{ marginBottom: "1rem" }}>
-                <p>
-                  <strong>Name:</strong> {member.firstName} {member.middleName}{" "}
-                  {member.lastName}
-                </p>
-                <p>
-                  <strong>Member ID:</strong> {member.uniqueId}
-                </p>
-                <p>
-                  <strong>Organization:</strong> {provider?.name}
-                </p>
-                {member.email && (
-                  <p>
-                    <strong>Email:</strong> {member.email}
-                  </p>
-                )}
-                {member.phone && (
-                  <p>
-                    <strong>Phone:</strong> {member.phone}
-                  </p>
-                )}
-                {member.category && (
-                  <p>
-                    <strong>Category:</strong> {member.category}
-                  </p>
-                )}
-                {member.subcategory && (
-                  <p>
-                    <strong>Subcategory:</strong> {member.subcategory}
-                  </p>
-                )}
-              </div>
-
-              {feePlans.length > 0 && (
-                <div style={{ marginBottom: "1rem" }}>
-                  <h4>Pending Fee Plans ({feePlans.length})</h4>
-                  {feePlans.map((plan) => (
-                    <div
-                      key={plan.id}
-                      style={{
-                        border: "1px solid #eee",
-                        padding: "0.5rem",
-                        margin: "0.5rem 0",
-                      }}
-                    >
-                      <p>
-                        <strong>{plan.name}</strong> - ₹{plan.amount}
-                      </p>
-                      <p>Due: {new Date(plan.dueDate).toLocaleDateString()}</p>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+              {memberships.map((membership) => (
+                <Card
+                  key={membership.id}
+                  className="hover:shadow-md transition-shadow"
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center bg-muted-foreground/5 text-primary rounded-lg p-2">
+                          {getProviderCategoryIcon(membership.providerCategory)}
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">
+                            {membership.memberName}
+                          </CardTitle>
+                          <CardDescription className="text-xs">
+                            ID: {membership.memberUniqueId}
+                          </CardDescription>
+                        </div>
+                      </div>
+                      {getStatusBadge(
+                        membership.hasOutstandingFees,
+                        membership.hasOverdueFees,
+                        membership.pendingFeePlansCount
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
+                  </CardHeader>
 
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <Button variant="outline" onClick={() => setStep(2)}>
-                  Back
-                </Button>
-                <Button onClick={claimMembershipAction} disabled={loading}>
-                  {loading ? "Claiming..." : "Claim Membership"}
-                </Button>
-                <Button variant="destructive" onClick={resetForm}>
-                  Start Over
+                  <CardContent className="pt-0 space-y-3">
+                    <div>
+                      <p className="font-medium text-sm">
+                        {membership.providerName}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {membership.providerCategory
+                          .replace("_", " ")
+                          .toLowerCase()}
+                      </p>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        Joined:{" "}
+                        {new Date(membership.claimedAt).toLocaleDateString()}
+                      </span>
+                      {membership.hasOutstandingFees && (
+                        <span
+                          className={`font-medium ${
+                            membership.hasOverdueFees
+                              ? "text-destructive"
+                              : "text-orange-600"
+                          }`}
+                        >
+                          {membership.pendingFeePlansCount}{" "}
+                          {membership.hasOverdueFees ? "overdue" : "pending"}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      {/* Always show View Details button */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        asChild
+                      >
+                        <Link
+                          href={`/${SLUGS.CONSUMER}/memberships/${membership.id}/schedule`}
+                        >
+                          <EyeIcon className="mr-1" weight="bold" />
+                          View Details
+                        </Link>
+                      </Button>
+
+                      {/* Show Quick Pay button only if there are outstanding fees */}
+                      {membership.hasOutstandingFees && (
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          variant={
+                            membership.hasOverdueFees
+                              ? "destructive"
+                              : "default"
+                          }
+                          asChild
+                        >
+                          <Link
+                            href={`/${SLUGS.CONSUMER}/memberships/${membership.id}/schedule`}
+                          >
+                            {membership.hasOverdueFees
+                              ? "Pay Overdue"
+                              : "Quick Pay"}
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {memberships.length > 1 && (
+              <div className="flex justify-center md:hidden">
+                <Button className="gap-2" asChild>
+                  <Link href={`/${SLUGS.CONSUMER}/memberships/add`}>
+                    <PlusIcon weight="bold" />
+                    Add Membership
+                  </Link>
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </>
         )}
       </div>
     </>
   );
 };
 
-export default LinkMembership;
+export default MembershipsPage;

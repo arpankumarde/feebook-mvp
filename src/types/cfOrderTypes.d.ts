@@ -13,5 +13,7 @@ export interface OrderMeta {
 }
 
 export interface OrderTags {
-  [key: string]: string;
+  providerId?: string;
+  feePlanId?: string;
+  consumerId?: string;
 }
