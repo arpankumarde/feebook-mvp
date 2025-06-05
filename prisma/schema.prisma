@@ -149,6 +149,7 @@ model FeePlan {
     dueDate            DateTime      @db.Date
     isOfflinePaid      Boolean       @default(false)
     consumerClaimsPaid Boolean       @default(false)
+    receipt            String?
     createdAt          DateTime      @default(now())
     updatedAt          DateTime      @updatedAt
     provider           Provider      @relation(fields: [providerId], references: [id])
@@ -195,15 +196,18 @@ model Transaction {
     paymentMethod         Json?
     paymentGroup          String?
     paymentSurcharge      Json?
+    paymentGateway        String
     paymentGatewayDetails Json?
     paymentOffers         Json[]        @default([])
     errorDetails          Json?
     terminalDetails       Json?
-    webhookResponse       Json
-    webhookAttempt        Int           @default(0)
-    webhookSignature      String
-    webhookTimestamp      DateTime
-    webhookVersion        String
+    source                String
+    webhookVerified       Boolean       @default(false)
+    webhookResponse       Json?
+    webhookAttempt        Int?          @default(0)
+    webhookSignature      String?
+    webhookTimestamp      DateTime?
+    webhookVersion        String?
     idempotencyKey        String?
     createdAt             DateTime      @default(now())
     updatedAt             DateTime      @updatedAt
