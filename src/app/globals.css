@@ -114,9 +114,16 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring/50 selection:bg-primary/10 selection:text-black select-none sm:select-auto;
   }
   body {
     @apply bg-background text-foreground;
   }
+}
+
+* {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
 }

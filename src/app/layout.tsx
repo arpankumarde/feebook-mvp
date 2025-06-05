@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Feebook for Teachers",
+  title: "Feebook",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-        <Toaster position="top-center" richColors />
+        <Toaster position="top-center" richColors theme="light" />
       </body>
     </html>
   );

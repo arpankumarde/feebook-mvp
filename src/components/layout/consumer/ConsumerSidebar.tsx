@@ -111,7 +111,7 @@ export function ConsumerSidebar() {
           <SidebarMenuItem className="flex items-center justify-between py-1.5">
             <div className="flex gap-3 items-center">
               <Avatar>
-                <AvatarImage src={consumer?.email} />
+                {/* <AvatarImage src={consumer?.email} /> */}
                 <AvatarFallback className="bg-primary/20">
                   {consumer?.firstName?.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
