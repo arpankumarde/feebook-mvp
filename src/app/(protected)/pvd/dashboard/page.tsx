@@ -2,6 +2,7 @@
 
 import ProviderTopbar from "@/components/layout/provider/ProviderTopbar";
 import { Button } from "@/components/ui/button";
+import { SLUGS } from "@/constants/slugs";
 import { useProviderAuth } from "@/hooks/use-provider-auth";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
@@ -31,7 +32,10 @@ const Page = () => {
               access all features.
             </p>
             <Button asChild variant="secondary" className="mt-2">
-              <Link href={`/pvd/kyc`} prefetch={false}>
+              <Link
+                href={`/${SLUGS.PROVIDER}/kyc?type=${provider?.type}`}
+                prefetch={false}
+              >
                 Proceed to KYC <ArrowRightIcon />
               </Link>
             </Button>
