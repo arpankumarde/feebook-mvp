@@ -1,331 +1,263 @@
 "use client";
 
 import { useConsumerAuth } from "@/hooks/use-consumer-auth";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { SLUGS } from "@/constants/slugs";
+import { Button } from "@/components/ui/button";
 import ConsumerTopbar from "@/components/layout/consumer/ConsumerTopbar";
+import { DashboardStats } from "@/components/consumer/dashboard/DashboardStats";
+import { UrgentFeesCard } from "@/components/consumer/dashboard/UrgentFeesCard";
+import { RecentTransactionsCard } from "@/components/consumer/dashboard/RecentTransactionsCard";
+import { MembershipsOverviewCard } from "@/components/consumer/dashboard/MembershipsOverviewCard";
+import {
+  SpinnerGapIcon,
+  XCircleIcon,
+  PlusIcon,
+} from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
+import { SLUGS } from "@/constants/slugs";
 
-interface MembershipData {
-  id: string;
-  claimedAt: string;
-  member: {
-    id: string;
-    uniqueId: string;
-    firstName: string;
-    middleName?: string;
-    lastName: string;
-    provider: {
-      id: string;
-      name: string;
-      code: string;
-      category: string;
-    };
-    feePlans: Array<{
-      id: string;
-      name: string;
-      description?: string;
-      amount: number;
-      status: string;
-      dueDate: string;
-    }>;
+interface DashboardData {
+  statistics: {
+    totalMemberships: number;
+    totalPendingFees: number;
+    totalPendingAmount: number;
+    overdueFees: number;
+    overdueAmount: number;
+    upcomingFees: number;
+    recentPaymentsTotal: number;
+    recentPaymentsCount: number;
   };
+  urgentFees: Array<{
+    id: string;
+    name: string;
+    amount: number;
+    dueDate: string;
+    status: string;
+    memberName: string;
+    providerName: string;
+    membershipId: string;
+  }>;
+  recentTransactions: Array<{
+    id: string;
+    amount: number;
+    paymentTime: string | null;
+    feePlanName: string;
+    memberName: string;
+    providerName: string;
+  }>;
+  memberships: Array<{
+    id: string;
+    claimedAt: string;
+    memberName: string;
+    memberUniqueId: string;
+    providerName: string;
+    providerCategory: any;
+    pendingFeesCount: number;
+  }>;
 }
 
 const ConsumerDashboard = () => {
   const { consumer } = useConsumerAuth();
-  const [memberships, setMemberships] = useState<MembershipData[]>([]);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [removingMembershipId, setRemovingMembershipId] = useState<
-    string | null
-  >(null);
-  const router = useRouter();
-
-  const fetchMemberships = useCallback(async () => {
-    if (!consumer?.id) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Use GET method as per the API implementation
-      const response = await api.get("/api/v1/consumer/memberships", {
-        params: {
-          consumerId: consumer.id,
-        },
-      });
-
-      const membershipData = response.data?.memberships || [];
-      setMemberships(Array.isArray(membershipData) ? membershipData : []);
-    } catch (err: any) {
-      console.error("Error fetching memberships:", err);
-      setError("Failed to load memberships");
-      setMemberships([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [consumer?.id]);
-
-  const handleRemoveMembership = async (
-    membershipId: string,
-    memberId: string
-  ) => {
-    if (!consumer?.id) return;
-
-    const confirmRemoval = window.confirm(
-      "Are you sure you want to remove this membership? This action cannot be undone."
-    );
-    if (!confirmRemoval) return;
-
-    try {
-      setRemovingMembershipId(membershipId);
-
-      await api.delete("/api/v1/consumer/memberships", {
-        params: {
-          consumerId: consumer.id,
-          memberId: memberId,
-        },
-      });
-
-      // Refresh memberships after successful removal
-      await fetchMemberships();
-    } catch (err: any) {
-      console.error("Error removing membership:", err);
-      setError("Failed to remove membership");
-    } finally {
-      setRemovingMembershipId(null);
-    }
-  };
 
   useEffect(() => {
-    fetchMemberships();
-  }, [consumer?.id, fetchMemberships]);
+    const fetchDashboardData = async () => {
+      if (!consumer?.id) {
+        setLoading(false);
+        return;
+      }
 
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await api.get("/api/v1/consumer/dashboard", {
+          params: {
+            consumerId: consumer.id,
+          },
+        });
+
+        if (response.data.success) {
+          setDashboardData(response.data.data);
+        } else {
+          throw new Error(response.data.error || "Failed to load dashboard");
+        }
+      } catch (err: any) {
+        console.error("Error fetching dashboard data:", err);
+        setError(err.response?.data?.error || "Failed to load dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [consumer?.id]);
+
+  // Loading state
   if (loading) {
-    return <div className="text-center py-8">Loading your memberships...</div>;
+    return (
+      <>
+        <ConsumerTopbar>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+            <h1 className="text-xl sm:text-2xl font-semibold">Dashboard</h1>
+            <span className="text-2xl text-muted-foreground hidden sm:inline">
+              |
+            </span>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Welcome back, {consumer?.firstName || "User"}
+            </p>
+          </div>
+        </ConsumerTopbar>
+
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex items-center space-x-3 text-muted-foreground">
+            <SpinnerGapIcon size={24} className="animate-spin text-primary" />
+            <span className="font-medium">Loading your dashboard...</span>
+          </div>
+        </div>
+      </>
+    );
   }
 
+  // Error state
   if (error) {
     return (
-      <Alert variant="destructive" className="max-w-md mx-auto">
-        <AlertDescription className="flex items-center justify-between">
-          <span>Error: {error}</span>
-          <Button
-            onClick={() => window.location.reload()}
-            variant="outline"
-            size="sm"
-          >
-            Retry
-          </Button>
-        </AlertDescription>
-      </Alert>
+      <>
+        <ConsumerTopbar>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+            <h1 className="text-xl sm:text-2xl font-semibold">Dashboard</h1>
+            <span className="text-2xl text-muted-foreground hidden sm:inline">
+              |
+            </span>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Welcome back, {consumer?.firstName || "User"}
+            </p>
+          </div>
+        </ConsumerTopbar>
+
+        <div className="p-4">
+          <Alert variant="destructive">
+            <XCircleIcon size={16} />
+            <AlertDescription className="flex items-center justify-between">
+              <span>{error}</span>
+              <Button
+                onClick={() => window.location.reload()}
+                variant="outline"
+                size="sm"
+              >
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </>
+    );
+  }
+
+  // No data state
+  if (!dashboardData) {
+    return (
+      <>
+        <ConsumerTopbar>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+            <h1 className="text-xl sm:text-2xl font-semibold">Dashboard</h1>
+            <span className="text-2xl text-muted-foreground hidden sm:inline">
+              |
+            </span>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Welcome back, {consumer?.firstName || "User"}
+            </p>
+          </div>
+        </ConsumerTopbar>
+
+        <div className="p-4">
+          <Alert>
+            <AlertDescription>
+              No dashboard data available. Please try again later.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </>
     );
   }
 
   return (
     <>
       <ConsumerTopbar>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-          <h1 className="text-xl sm:text-2xl font-semibold">Dashboard</h1>
-          <span className="text-2xl text-muted-foreground hidden sm:inline">
-            |
-          </span>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Manage your dashboard here.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+            <h1 className="text-xl sm:text-2xl font-semibold">Dashboard</h1>
+            <span className="text-2xl text-muted-foreground hidden sm:inline">
+              |
+            </span>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Welcome back, {consumer?.firstName || "User"}
+            </p>
+          </div>
+
+          {dashboardData.statistics.totalMemberships === 0 && (
+            <Button className="gap-2 hidden lg:inline-flex" asChild>
+              <Link href={`/${SLUGS.CONSUMER}/memberships/add`}>
+                <PlusIcon size={16} weight="bold" />
+                Add Membership
+              </Link>
+            </Button>
+          )}
         </div>
       </ConsumerTopbar>
 
-      <div className="p-2 sm:p-4 space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">My Memberships</h2>
-          <Button asChild>
-            <Link href={`/${SLUGS.CONSUMER}/memberships`}>
-              Add New Membership
-            </Link>
-          </Button>
-        </div>
+      <div className="p-4 space-y-6">
+        {/* Dashboard Statistics */}
+        <DashboardStats statistics={dashboardData.statistics} />
 
-        {!memberships || memberships.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-muted-foreground mb-4">
-                No memberships found.
-              </p>
-              <Button asChild>
-                <Link href={`/${SLUGS.CONSUMER}/memberships`}>
-                  Link your first membership
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            <UrgentFeesCard urgentFees={dashboardData.urgentFees} />
+            <RecentTransactionsCard
+              transactions={dashboardData.recentTransactions}
+            />
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            <MembershipsOverviewCard memberships={dashboardData.memberships} />
+
+            {/* Quick Actions Card */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Button variant="outline" className="h-20 flex-col gap-2" asChild>
+                <Link href={`/${SLUGS.CONSUMER}/memberships/add`}>
+                  <PlusIcon size={24} weight="bold" />
+                  <span className="text-sm">Add Membership</span>
                 </Link>
               </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-6">
-            {memberships.map((membership) => {
-              const memberName = [
-                membership.member?.firstName,
-                membership.member?.middleName,
-                membership.member?.lastName,
-              ]
-                .filter(Boolean)
-                .join(" ");
 
-              const feePlans = membership.member?.feePlans || [];
+              <Button variant="outline" className="h-20 flex-col gap-2" asChild>
+                <Link href={`/${SLUGS.CONSUMER}/payment-history`}>
+                  <SpinnerGapIcon size={24} weight="bold" />
+                  <span className="text-sm">Payment History</span>
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
 
-              return (
-                <Card key={membership.id}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                        <CardTitle className="text-xl">
-                          {memberName || "Unknown Member"}
-                        </CardTitle>
-                        <CardDescription>
-                          <span className="font-medium">Member ID:</span>{" "}
-                          {membership.member?.uniqueId || "N/A"}
-                          <Separator
-                            orientation="vertical"
-                            className="mx-2 h-4 inline-block"
-                          />
-                          {membership.member?.provider?.name ||
-                            "Unknown Organization"}
-                        </CardDescription>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link
-                            href={`/${SLUGS.CONSUMER}/memberships/${membership.id}/schedule`}
-                          >
-                            View Schedule
-                          </Link>
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() =>
-                            handleRemoveMembership(
-                              membership.id,
-                              membership.member.id
-                            )
-                          }
-                          disabled={removingMembershipId === membership.id}
-                        >
-                          {removingMembershipId === membership.id
-                            ? "Removing..."
-                            : "Remove"}
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <span className="font-medium text-muted-foreground">
-                          Organization:
-                        </span>
-                        <p>{membership.member?.provider?.name || "N/A"}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-muted-foreground">
-                          Category:
-                        </span>
-                        <p>{membership.member?.provider?.category || "N/A"}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-muted-foreground">
-                          Claimed:
-                        </span>
-                        <p>
-                          {membership.claimedAt
-                            ? new Date(
-                                membership.claimedAt
-                              ).toLocaleDateString()
-                            : "N/A"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {feePlans.length > 0 && (
-                      <>
-                        <Separator />
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium">Pending Fee Plans</h4>
-                            <Badge variant="secondary">{feePlans.length}</Badge>
-                          </div>
-                          <div className="grid gap-3">
-                            {feePlans.slice(0, 3).map((plan) => (
-                              <Card key={plan.id} className="p-4">
-                                <div className="flex justify-between items-start mb-3">
-                                  <div>
-                                    <h5 className="font-medium">
-                                      {plan.name || "Unnamed Fee"}
-                                    </h5>
-                                    <p className="text-sm text-muted-foreground">
-                                      Due:{" "}
-                                      {plan.dueDate
-                                        ? new Date(
-                                            plan.dueDate
-                                          ).toLocaleDateString()
-                                        : "No due date"}
-                                    </p>
-                                  </div>
-                                  <Badge
-                                    variant="outline"
-                                    className="text-lg font-semibold"
-                                  >
-                                    ₹{plan.amount || 0}
-                                  </Badge>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  className="w-full"
-                                  onClick={() => {
-                                    const feePlanId = plan.id;
-                                    if (feePlanId) {
-                                      // Use only feePlanId parameter
-                                      router.push(
-                                        `/${SLUGS.CONSUMER}/pay?feePlanId=${feePlanId}`
-                                      );
-                                    }
-                                  }}
-                                  disabled={!plan.id}
-                                >
-                                  Pay Now
-                                </Button>
-                              </Card>
-                            ))}
-                          </div>
-                          {feePlans.length > 3 && (
-                            <p className="text-sm text-muted-foreground text-center">
-                              ... and {feePlans.length - 3} more. View full
-                              schedule for details.
-                            </p>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+        {/* Mobile Quick Actions */}
+        {dashboardData.statistics.totalMemberships === 0 && (
+          <div className="lg:hidden">
+            <Button className="w-full gap-2" size="lg" asChild>
+              <Link href={`/${SLUGS.CONSUMER}/memberships/add`}>
+                <PlusIcon size={20} weight="bold" />
+                Add Your First Membership
+              </Link>
+            </Button>
           </div>
         )}
       </div>

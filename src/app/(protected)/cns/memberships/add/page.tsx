@@ -27,7 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import ConsumerTopbar from "@/components/layout/consumer/ConsumerTopbar";
 import { toast } from "sonner";
 import { SLUGS } from "@/constants/slugs";
-import { INDIAN_STATES } from "@/data/common/regions";
+import { REGIONS } from "@/data/common/regions";
 import { AccountCategory } from "@prisma/client";
 import {
   ArrowLeftIcon,
@@ -310,7 +310,7 @@ const AddMembershipPage = () => {
                     <SelectValue placeholder="Select your state" />
                   </SelectTrigger>
                   <SelectContent>
-                    {INDIAN_STATES.map((state) => (
+                    {REGIONS.map((state) => (
                       <SelectItem key={state.code} value={state.code}>
                         {state.name}
                       </SelectItem>
