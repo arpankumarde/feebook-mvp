@@ -12,6 +12,8 @@ model Provider {
     id                 String                @id @default(uuid())
     name               String
     type               AccountType
+    region             String?               @db.VarChar(2)
+    country            String                @default("IN") @db.VarChar(2)
     category           AccountCategory       @default(OTHER)
     status             AccountStatus         @default(PENDING)
     code               String                @unique // Identifier for consumers to find the provider

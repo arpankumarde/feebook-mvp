@@ -77,13 +77,13 @@ export async function GET(request: NextRequest) {
       (payment) => ({
         orderId: payment?.order_id || orderId,
         feePlanId: order?.order_tags?.feePlanId,
-        consumerId: order?.order_tags?.consumerId,
-        externalPaymentId: payment?.cf_payment_id ?? "",
+        consumerId: order?.order_tags?.consumerId || null,
+        externalPaymentId: payment?.cf_payment_id || null,
         amount: payment?.payment_amount || 0,
         status: payment?.payment_status as PaymentStatus,
         paymentTime: payment?.payment_time,
-        paymentCurrency: payment?.payment_currency ?? "INR",
-        paymentMessage: payment?.payment_message,
+        paymentCurrency: payment?.payment_currency || "INR",
+        paymentMessage: payment?.payment_message || null,
         bankReference: payment?.bank_reference,
         paymentMethod: payment?.payment_method
           ? JSON.parse(JSON.stringify(payment?.payment_method))
@@ -108,6 +108,7 @@ export async function GET(request: NextRequest) {
         source: "GETAPI",
       })
     );
+    console.log("Payment DB Format:", paymentDbFormat);
 
     let createdTransactions: Transaction[] = [];
     if (paymentDbFormat.length > 0) {
@@ -183,8 +184,11 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("Error fetching order details:", error);
-    return NextResponse.json(error.response.data.message, {
-      status: 500,
-    });
+    return NextResponse.json(
+      { success: false, error: "Internal Server Error" },
+      {
+        status: 500,
+      }
+    );
   }
 }

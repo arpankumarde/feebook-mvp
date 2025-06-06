@@ -166,7 +166,7 @@ const MembershipsPage = () => {
               Manage your memberships here.
             </p>
           </div>
-          <Button className="gap-2 hidden lg:inline-flex" asChild>
+          <Button className="gap-2 hidden lg:inline-flex" asChild size={"sm"}>
             <Link href={`/${SLUGS.CONSUMER}/memberships/add`}>
               <PlusIcon weight="bold" />
               Add Membership
