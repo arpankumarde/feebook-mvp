@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       email,
       name: existingProvider.adminName || existingProvider.name,
       purpose: "login",
+      channel: "EMAIL",
     });
 
     if (!otpResult.success) {

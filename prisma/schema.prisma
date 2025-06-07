@@ -256,6 +256,24 @@ model WithdrawalRequest {
     bankAccountId String
 }
 
+// OTP model for storing one-time passwords
+model Otp {
+    id        String   @id @default(uuid())
+    email     String?
+    phone     String?  @db.VarChar(10)
+    otp       String   @db.VarChar(6)
+    channel   String   @default("EMAIL")
+    purpose   String
+    attempts  Int      @default(0)
+    expiresAt DateTime
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([email])
+    @@index([phone])
+    @@index([expiresAt])
+}
+
 enum AccountType {
     INDIVIDUAL
     ORGANIZATION

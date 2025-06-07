@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify OTP using centralized service
-    const otpResult = otpService.verifyOTP({ email, otp });
+    const otpResult = await otpService.verifyOTP({ email, otp });
 
     if (!otpResult.success) {
       return NextResponse.json(

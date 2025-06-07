@@ -158,7 +158,7 @@ class EmailService {
 
     return await this.sendEmail({
       to: data.email,
-      subject: `FeeBook OTP: ${data.otp}`,
+      subject: `FeeBook OTP Verification`,
       html: htmlTemplate,
       text: textContent,
     });
