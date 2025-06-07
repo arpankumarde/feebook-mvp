@@ -33,7 +33,7 @@ const Page = () => {
             </p>
             <Button asChild variant="secondary" className="mt-2">
               <Link
-                href={`/${SLUGS.PROVIDER}/kyc?type=${provider?.type}`}
+                href={`/${SLUGS.PROVIDER}/kyc/${provider?.type.toLowerCase()}`}
                 prefetch={false}
               >
                 Proceed to KYC <ArrowRightIcon />

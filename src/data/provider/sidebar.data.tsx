@@ -6,6 +6,7 @@ import {
   MathOperationsIcon,
   UsersIcon,
   WalletIcon,
+  IdentificationCardIcon,
 } from "@phosphor-icons/react/dist/ssr";
 
 export const ProviderSidebarData = {
@@ -68,6 +69,16 @@ export const ProviderSidebarData = {
     {
       label: "Settings",
       items: [
+        {
+          label: "KYC Verification",
+          key: "kyc",
+          icon: (
+            <IdentificationCardIcon
+              className="text-primary h-full w-full"
+              weight="duotone"
+            />
+          ),
+        },
         {
           label: "Institution Profile",
           key: "profile",

@@ -36,27 +36,37 @@ model Provider {
 model ProviderVerification {
     id               String             @id @default(uuid())
     providerId       String             @unique
-    status           VerificationStatus @default(PENDING)
-    panNumber        String             @db.VarChar(10)
-    panDocument      String // Document URL
-    panBizNumber     String?
-    panBizDocument   String?
-    aadhaarNumber    String?            @db.VarChar(12)
-    aadhaarDocument  String? // Document URL
-    legalName        String
-    legalBizName     String?
-    dob              DateTime           @db.Date
+    status           VerificationStatus @default(PROCESSING)
+    // Common fields
+    pocName          String
+    pocPanNum        String             @db.VarChar(10)
+    pocPanDoc        String
+    pocAadhaarNum    String             @db.VarChar(12)
+    pocAadhaarDoc    String
+    pocDob           DateTime?          @db.Date
+    // Organisation-specific fields
+    orgName          String
+    orgLegalName     String?
+    orgType          String?
+    orgOtherType     String?
+    orgCin           String?
+    orgLlpin         String?
+    orgGstin         String?
+    orgPan           String?
+    orgPanDoc        String?
+    orgGstDoc        String?
+    orgRegDoc        String?
+    // Address information 
     address          String
-    cinNumber        String?
-    llpinNumber      String?
-    gstin            String?
-    gstDocument      String? // Document URL
-    rejectionReason  String?
+    regAddress       Json?
     verifierResponse Json[]             @default([])
-    approvedAt       DateTime?
+    remarks          String?
+    assertedAt       DateTime?
     createdAt        DateTime           @default(now())
     updatedAt        DateTime           @updatedAt
     provider         Provider           @relation(fields: [providerId], references: [id])
+
+    @@index([providerId])
 }
 
 // Moderator model
@@ -267,8 +277,9 @@ enum AccountStatus {
 }
 
 enum VerificationStatus {
+    PROCESSING
     PENDING
-    APPROVED
+    VERIFIED
     REJECTED
 }
 

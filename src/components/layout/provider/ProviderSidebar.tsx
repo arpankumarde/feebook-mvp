@@ -88,16 +88,20 @@ export function ProviderSidebar() {
                     >
                       <Link
                         href={
-                          provider?.isVerified
+                          provider?.isVerified ||
+                          item.key === "dashboard" ||
+                          item.key === "kyc"
                             ? `/${SLUGS.PROVIDER}/${item.key}`
-                            : "#"
+                            : `/${SLUGS.PROVIDER}/dashboard`
                         }
                         className="text-lg font-semibold text-gray-700"
                         onClick={() => setOpenMobile(false)}
                         draggable="false"
                       >
                         <i className="size-6">
-                          {provider?.isVerified || item.key === "dashboard" ? (
+                          {provider?.isVerified ||
+                          item.key === "dashboard" ||
+                          item.key === "kyc" ? (
                             item.icon
                           ) : (
                             <LockIcon
