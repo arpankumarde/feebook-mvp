@@ -83,11 +83,15 @@ model Moderator {
 // Bank account details for providers
 model BankAccount {
     id                 String              @id @default(uuid())
+    refId              String?             @unique
     providerId         String
-    accountNumber      String
+    accNumber          String
     ifsc               String
-    accountName        String
-    bankName           String
+    accName            String?
+    accPhone           String?             @db.VarChar(10)
+    bankName           String?
+    branchName         String?
+    vpa                String?             @db.VarChar(100)
     verifierResponse   Json?
     verificationStatus VerificationStatus  @default(PENDING)
     isDefault          Boolean             @default(false)

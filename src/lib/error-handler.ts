@@ -69,18 +69,21 @@ export class ApiErrorHandler {
   /**
    * Handle general API errors
    */
-  static handleApiError(error: unknown, defaultMessage: string = "Internal server error"): NextResponse {
+  static handleApiError(
+    error: unknown,
+    defaultMessage: string = "Internal server error"
+  ): NextResponse {
     console.error("API error:", error);
-    
+
     if (error instanceof Error) {
       return NextResponse.json(
-        { error: error.message },
+        { success: false, error: error.message },
         { status: 500 }
       );
     }
 
     return NextResponse.json(
-      { error: defaultMessage },
+      { success: false, error: defaultMessage },
       { status: 500 }
     );
   }

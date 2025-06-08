@@ -1,4 +1,7 @@
+"use client";
+
 import ProviderTopbar from "@/components/layout/provider/ProviderTopbar";
+import BankCard from "@/components/provider/wallet/BankCard";
 
 const Page = () => {
   return (
@@ -16,7 +19,9 @@ const Page = () => {
       </ProviderTopbar>
 
       <div className="p-2 sm:p-4">
-        <p className="text-muted-foreground">Under Construction</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <BankCard />
+        </div>
       </div>
     </>
   );
