@@ -104,7 +104,7 @@ model BankAccount {
 // Consumer model (End users who pay fees)
 model Consumer {
     id              String           @id @default(uuid())
-    email           String           @unique
+    email           String?
     phone           String           @unique @db.VarChar(10)
     password        String
     firstName       String?

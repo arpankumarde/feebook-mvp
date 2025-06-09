@@ -3,14 +3,14 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from "lucide-react";
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
@@ -23,65 +23,51 @@ import { SLUGS } from "@/constants/slugs";
 
 const Page = () => {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    password: "",
-  });
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [step, setStep] = useState<"credentials" | "otp">("credentials");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const validatePhoneNumber = (phoneNumber: string) => {
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(phoneNumber);
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleRegisterAndSendOtp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    // Client-side validation
-    if (formData.phone.length !== 10) {
-      setError("Phone number must be exactly 10 digits");
+    if (!validatePhoneNumber(phone)) {
+      setError("Please enter a valid 10-digit phone number");
       setLoading(false);
       return;
     }
 
-    if (formData.password.length < 6) {
+    if (password.length < 6) {
       setError("Password must be at least 6 characters long");
       setLoading(false);
       return;
     }
 
     try {
-      const response = await api.post<LoginResponse<Consumer>>(
-        "/api/v1/auth/consumer/register",
-        {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password,
-        }
-      );
+      const response = await api.post("/api/v1/auth/consumer/register", {
+        phone,
+        password,
+      });
 
-      const { success, user, error: apiError, message } = response.data;
-
-      if (success && user) {
-        setConsumerCookie(user);
-
-        toast.success(message || "Registration successful!");
-        router.push(`/${SLUGS.CONSUMER}/dashboard`);
+      if (response.data.success) {
+        setStep("otp");
+        toast.success("OTP sent successfully! Please verify your phone number.");
       } else {
-        setError(apiError || "Registration failed");
-        toast.error(apiError || "Registration failed");
+        setError(response.data.error || "Failed to register");
+        toast.error(response.data.error || "Failed to register");
       }
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.error || "An error occurred during registration";
+      const errorMessage = err.response?.data?.error || "Registration failed";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -89,115 +75,267 @@ const Page = () => {
     }
   };
 
+  const handleVerifyOtp = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (otp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await api.post<LoginResponse<Consumer>>(
+        "/api/v1/auth/consumer/verify-registration",
+        {
+          phone,
+          otp,
+        }
+      );
+
+      const { success, user, error: apiError } = response.data;
+
+      if (success && user) {
+        setConsumerCookie(user);
+        toast.success("Registration successful! Welcome to FeeBook!");
+        router.push(`/${SLUGS.CONSUMER}/dashboard`);
+      } else {
+        setError(apiError || "OTP verification failed");
+        toast.error(apiError || "OTP verification failed");
+      }
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.error || "OTP verification failed";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await api.post("/api/v1/auth/consumer/resend-registration-otp", {
+        phone,
+      });
+
+      if (response.data.success) {
+        toast.success("OTP sent successfully!");
+        setOtp("");
+      } else {
+        setError(response.data.error || "Failed to resend OTP");
+        toast.error(response.data.error || "Failed to resend OTP");
+      }
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || "Failed to resend OTP";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setPhone(value);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">
-            Consumer Registration
-          </CardTitle>
-          <CardDescription>
-            Create your account to access payment services
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name*</Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  placeholder="John"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name*</Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  placeholder="Doe"
-                  required
-                />
-              </div>
+    <div className="min-h-dvh flex flex-col-reverse md:flex-row items-center justify-center bg-gray-50">
+      <div className="p-4 flex-1 min-h-dvh bg-primary/10 hidden sm:block"></div>
+      <div className="p-4 flex-1 min-h-dvh w-full flex items-center justify-center">
+        <div className="w-full sm:w-4/5 xl:w-3/5">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Consumer Registration
+            </h1>
+            <p className="text-gray-600">
+              {step === "credentials"
+                ? "Create your FeeBook account"
+                : "Enter the OTP sent to your phone"}
+            </p>
+          </div>
+
+          {/* Form */}
+          <div>
+            {error && (
+              <Alert variant="destructive" className="mb-6 bg-red-400/20">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {step === "credentials" ? (
+              <form onSubmit={handleRegisterAndSendOtp} className="space-y-5">
+                {/* Phone Field */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="phone"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Phone Number
+                  </Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={handlePhoneChange}
+                    placeholder="Enter 10-digit phone number"
+                    className="h-12 border-gray-300 focus:border-primary focus:ring-primary"
+                    maxLength={10}
+                    required
+                  />
+                  <p className="text-xs text-gray-500">
+                    Enter 10-digit phone number
+                  </p>
+                </div>
+
+                {/* Password Field */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="password"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Create a secure password"
+                      className="h-12 pr-10 border-gray-300 focus:border-primary focus:ring-primary"
+                      minLength={6}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? (
+                        <EyeOffIcon className="h-5 w-5" />
+                      ) : (
+                        <EyeIcon className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Minimum 6 characters
+                  </p>
+                </div>
+
+                {/* Register Button */}
+                <Button
+                  type="submit"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-md"
+                  disabled={loading}
+                >
+                  {loading ? "Creating Account..." : "Create Account"}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} className="space-y-5">
+                {/* OTP Input */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="otp"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    <span className="text-center w-full">
+                      Enter 6-digit OTP
+                    </span>
+                  </Label>
+                  <div className="flex justify-center h-12">
+                    <InputOTP
+                      value={otp}
+                      onChange={setOtp}
+                      maxLength={6}
+                      className="justify-center my-4"
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} className="h-12 w-12" />
+                        <InputOTPSlot index={1} className="h-12 w-12" />
+                        <InputOTPSlot index={2} className="h-12 w-12" />
+                      </InputOTPGroup>
+                      <InputOTPSeparator />
+                      <InputOTPGroup>
+                        <InputOTPSlot index={3} className="h-12 w-12" />
+                        <InputOTPSlot index={4} className="h-12 w-12" />
+                        <InputOTPSlot index={5} className="h-12 w-12" />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">
+                    OTP sent to {phone}
+                  </p>
+                </div>
+
+                {/* Verify OTP Button */}
+                <Button
+                  type="submit"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-md"
+                  disabled={loading || otp.length !== 6}
+                >
+                  {loading ? "Verifying..." : "Verify & Complete Registration"}
+                </Button>
+
+                {/* Resend OTP */}
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    className="text-sm text-primary hover:text-primary/80 font-medium"
+                    disabled={loading}
+                  >
+                    Resend OTP
+                  </button>
+                </div>
+
+                {/* Back to credentials */}
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep("credentials");
+                      setOtp("");
+                      setError("");
+                    }}
+                    className="text-sm text-gray-600 hover:text-gray-800"
+                  >
+                    Back to registration
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Login Link */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Already have an account?{" "}
+                <Link
+                  href={`/auth/${SLUGS.CONSUMER}/login`}
+                  className="text-primary hover:text-primary/80 font-medium"
+                >
+                  Sign In
+                </Link>
+              </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="john.doe@example.com"
-              />
+            {/* Security Notice */}
+            <div className="mt-6 flex items-center justify-center text-xs text-gray-500">
+              <ShieldCheckIcon className="h-4 w-4 mr-1" />
+              <span>Secure registration • 256-bit encryption</span>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number*</Label>
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => {
-                  const value = e.target.value
-                    .replace(/[^0-9]/g, "")
-                    .slice(0, 10);
-                  setFormData((prev) => ({ ...prev, phone: value }));
-                }}
-                placeholder="9876543210"
-                pattern="[0-9]{10}"
-                minLength={10}
-                maxLength={10}
-                title="Please enter exactly 10 digits"
-                required
-              />
-              <p className="text-xs text-gray-500">10-digit mobile number</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password*</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Create a secure password"
-                minLength={6}
-                required
-              />
-              <p className="text-xs text-gray-500">Minimum 6 characters</p>
-            </div>
-
-            {error && <p className="text-sm text-red-500">{error}</p>}
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating Account..." : "Create Account"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-center text-sm">
-            Already have an account?{" "}
-            <Link
-              href={`/auth/${SLUGS.CONSUMER}/login`}
-              className="text-blue-600 hover:underline"
-            >
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

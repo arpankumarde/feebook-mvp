@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if consumer exists
+    // Check if consumer exists and is not verified
     const consumer = await db.consumer.findUnique({
       where: { phone },
     });
@@ -40,28 +40,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "No account found with this phone number",
-          message: "No account found with this phone number",
+          error: "Consumer not found",
+          message: "Consumer not found",
         },
         { status: 404 }
       );
     }
 
-    if (!consumer.isPhoneVerified) {
+    if (consumer.isPhoneVerified) {
       return NextResponse.json(
         {
           success: false,
-          error: "Phone number not verified. Please complete registration first.",
-          message: "Phone number not verified. Please complete registration first.",
+          error: "Phone number already verified",
+          message: "Phone number already verified",
         },
         { status: 400 }
       );
     }
 
-    // Send OTP for login
+    // Send OTP for phone verification
     const otpResult = await otpService.generateAndSendOTP({
       phone,
-      purpose: "login",
+      purpose: "verification",
       channel: "SMS",
     });
 
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error sending login OTP:", error);
+    console.error("Error resending registration OTP:", error);
     return NextResponse.json(
       {
         success: false,

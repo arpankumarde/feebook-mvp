@@ -121,7 +121,7 @@ class OTPService {
       }
 
       // Store OTP in database
-      const ap = await db.otp.create({
+      await db.otp.create({
         data: {
           email: options.email,
           phone: options.phone,
@@ -133,7 +133,6 @@ class OTPService {
           refId: refId,
         },
       });
-      console.log(ap);
 
       return {
         success: true,

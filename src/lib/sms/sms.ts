@@ -2,8 +2,8 @@ import axios from "axios";
 
 export interface SmsOtpDto {
   template_id: string;
-  short_url: 0 | 1;
-  short_url_expiry: number;
+  short_url?: 0 | 1;
+  short_url_expiry?: number;
   realTimeResponse: 0 | 1;
   recipients: [
     {
