@@ -1,15 +1,18 @@
 import emailService from "./email-service";
 import db from "./db";
+import smsService from "./sms/sms.service";
 
 interface GenerateOTPOptions {
-  email: string;
-  name: string;
+  email?: string;
+  phone?: string;
+  name?: string;
   purpose: "login" | "verification" | "password-reset";
   channel: "EMAIL" | "SMS";
 }
 
 interface VerifyOTPOptions {
-  email: string;
+  email?: string;
+  phone?: string;
   otp: string;
 }
 
@@ -71,7 +74,7 @@ class OTPService {
       // Delete any existing OTP for this email and purpose
       await db.otp.deleteMany({
         where: {
-          email: options.email,
+          OR: [{ email: options.email }, { phone: options.phone }],
           purpose: options.purpose,
         },
       });
@@ -82,36 +85,55 @@ class OTPService {
         Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000
       );
 
+      let refId = "";
+
+      if (options.channel === "EMAIL" && !!options.email) {
+        // Send OTP via email service
+        const emailSentSuccessfully = await emailService.sendOTPEmail({
+          email: options.email,
+          otp: otpCode,
+          name: options.name || "",
+          purpose: options.purpose,
+        });
+
+        if (!emailSentSuccessfully) {
+          return {
+            success: false,
+            message: "Failed to send OTP email. Please try again.",
+          };
+        }
+
+        refId = emailSentSuccessfully.refId;
+      } else if (options.channel === "SMS" && !!options.phone) {
+        const smsSentSuccessfully = await smsService.sendOtp(
+          `91${options.phone}`,
+          otpCode
+        );
+
+        if (!smsSentSuccessfully) {
+          return {
+            success: false,
+            message: "Failed to send OTP SMS. Please try again.",
+          };
+        }
+
+        refId = smsSentSuccessfully.message;
+      }
+
       // Store OTP in database
-      const savedOTP = await db.otp.create({
+      const ap = await db.otp.create({
         data: {
           email: options.email,
+          phone: options.phone,
           otp: otpCode,
           purpose: options.purpose,
           attempts: 0,
           expiresAt: expirationDate,
+          channel: options.channel,
+          refId: refId,
         },
       });
-
-      // Send OTP via email service
-      const emailSentSuccessfully = await emailService.sendOTPEmail({
-        email: options.email,
-        otp: otpCode,
-        name: options.name,
-        purpose: options.purpose,
-      });
-
-      if (!emailSentSuccessfully) {
-        // Clean up stored OTP if email failed
-        await db.otp.delete({
-          where: { id: savedOTP.id },
-        });
-
-        return {
-          success: false,
-          message: "Failed to send OTP email. Please try again.",
-        };
-      }
+      console.log(ap);
 
       return {
         success: true,
@@ -129,7 +151,7 @@ class OTPService {
 
   /**
    * Verify OTP against database records
-   * @param options - Email and OTP for verification
+   * @param options - Email/phone and OTP for verification
    * @returns Verification result with success status
    */
   async verifyOTP(options: VerifyOTPOptions): Promise<{
@@ -140,10 +162,10 @@ class OTPService {
       // Clean up expired OTPs first
       await this.cleanupExpiredOTPs();
 
-      // Find the most recent valid OTP for this email
+      // Find the most recent valid OTP for this email or phone
       const storedOTP = await db.otp.findFirst({
         where: {
-          email: options.email,
+          OR: [{ email: options.email }, { phone: options.phone }],
           expiresAt: {
             gt: new Date(),
           },
@@ -211,14 +233,14 @@ class OTPService {
 
   /**
    * Get remaining time for OTP expiration
-   * @param email - Email to check OTP expiration for
+   * @param identifier - Email or phone to check OTP expiration for
    * @returns Remaining seconds or 0 if no valid OTP
    */
-  async getRemainingTime(email: string): Promise<number> {
+  async getRemainingTime(identifier: string): Promise<number> {
     try {
       const storedOTP = await db.otp.findFirst({
         where: {
-          email,
+          OR: [{ email: identifier }, { phone: identifier }],
           expiresAt: {
             gt: new Date(),
           },

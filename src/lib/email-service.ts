@@ -55,7 +55,9 @@ class EmailService {
   /**
    * Send email with custom content
    */
-  async sendEmail(options: EmailOptions): Promise<boolean> {
+  async sendEmail(
+    options: EmailOptions
+  ): Promise<{ success: boolean; refId: string }> {
     try {
       const mailOptions = {
         from: `"FeeBook" <${process.env.EMAIL_ADDR || process.env.EMAIL_USER}>`,
@@ -67,17 +69,19 @@ class EmailService {
 
       const info = await this.transporter.sendMail(mailOptions);
       console.log("Email sent successfully:", info.messageId);
-      return true;
+      return { success: true, refId: info.messageId };
     } catch (error) {
       console.error("Failed to send email:", error);
-      return false;
+      return { success: false, refId: "" };
     }
   }
 
   /**
    * Send OTP email with branded template
    */
-  async sendOTPEmail(data: OTPEmailData): Promise<boolean> {
+  async sendOTPEmail(
+    data: OTPEmailData
+  ): Promise<{ success: boolean; refId: string }> {
     const purposeText = {
       login: "login to your account",
       verification: "verify your account",

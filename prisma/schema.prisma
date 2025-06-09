@@ -264,10 +264,11 @@ model WithdrawalRequest {
 model Otp {
     id        String   @id @default(uuid())
     email     String?
-    phone     String?  @db.VarChar(10)
+    phone     String?
     otp       String   @db.VarChar(6)
     channel   String   @default("EMAIL")
     purpose   String
+    refId     String?
     attempts  Int      @default(0)
     expiresAt DateTime
     createdAt DateTime @default(now())
