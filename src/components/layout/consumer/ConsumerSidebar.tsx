@@ -53,14 +53,14 @@ export function ConsumerSidebar() {
               <Link href="#">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Image
-                    src="/brand/icon.png"
+                    src="/brand/icon.svg"
                     alt="Feebook"
                     height={50}
                     width={50}
                   />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-bold text-primary text-2xl">
+                  <span className="font-bold text-brand/80 text-2xl">
                     Feebook
                   </span>
                 </div>

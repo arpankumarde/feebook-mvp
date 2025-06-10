@@ -53,14 +53,14 @@ export function ProviderSidebar() {
               <Link href="#">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
                   <Image
-                    src="/brand/icon.png"
+                    src="/brand/icon.svg"
                     alt="Feebook"
                     height={50}
                     width={50}
                   />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-bold text-primary text-2xl">
+                  <span className="font-bold text-brand/80 text-2xl">
                     Feebook
                   </span>
                 </div>
@@ -128,7 +128,7 @@ export function ProviderSidebar() {
           <SidebarMenuItem className="flex items-center justify-between py-1.5">
             <div className="flex gap-3 items-center">
               <Avatar>
-                <AvatarImage src={provider?.type} />
+                {/* <AvatarImage src={provider?.type} /> */}
                 <AvatarFallback className="bg-primary/20">
                   {provider?.adminName?.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
