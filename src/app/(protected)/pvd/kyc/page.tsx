@@ -635,8 +635,8 @@ const Page = () => {
                     <WarningIcon size={16} className="text-red-600" />
                     <AlertDescription className="text-red-700">
                       <strong>Common reasons for rejection:</strong> Unclear
-                      documents, missing information, or documents that don't
-                      match the provided details.
+                      documents, missing information, or documents that don{`'`}
+                      t match your provided details.
                     </AlertDescription>
                   </Alert>
 
@@ -741,7 +741,8 @@ const Page = () => {
                   className={config.iconColor.replace("600", "700")}
                 >
                   <strong>Important:</strong> Keep your login credentials
-                  secure. We'll never ask for your password via email or phone.
+                  secure. We will never ask for your password via email or
+                  phone.
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -785,7 +786,7 @@ const Page = () => {
               />
             </div>
             <p className="text-sm text-green-600 max-w-md mx-auto">
-              Thank you for choosing our platform. We're excited to help you
+              Thank you for choosing our platform. We{`'`}re excited to help you
               streamline your fee management process.
             </p>
           </div>

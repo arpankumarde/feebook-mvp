@@ -25,7 +25,6 @@ import {
   EnvelopeSimpleIcon,
   PhoneIcon,
   ShieldCheckIcon,
-  CurrencyInrIcon,
   LinkIcon,
   ReceiptIcon,
   FilePdfIcon,

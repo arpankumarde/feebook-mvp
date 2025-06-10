@@ -10,11 +10,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
-import { useConsumerAuth } from "@/hooks/use-consumer-auth";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Order, OrderStatus, Transaction } from "@prisma/client";
@@ -26,18 +23,8 @@ import {
   XCircleIcon,
   ClockIcon,
   ArrowLeftIcon,
-  HouseIcon,
   CreditCardIcon,
-  CalendarIcon,
-  CurrencyInrIcon,
-  IdentificationCardIcon,
-  BuildingOfficeIcon,
-  UserIcon,
   ReceiptIcon,
-  WarningIcon,
-  InfoIcon,
-  CopyIcon,
-  BankIcon,
   ShieldCheckIcon,
   UsersThreeIcon,
 } from "@phosphor-icons/react/dist/ssr";

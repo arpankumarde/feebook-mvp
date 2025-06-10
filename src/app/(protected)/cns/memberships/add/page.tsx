@@ -248,7 +248,9 @@ const AddMembershipPage = () => {
           <Card>
             <CardHeader>
               <CardTitle>Choose a Category</CardTitle>
-              <CardDescription>Select what you're looking for</CardDescription>
+              <CardDescription>
+                Select what you{`'`}re looking for
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

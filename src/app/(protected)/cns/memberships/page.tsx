@@ -194,8 +194,8 @@ const MembershipsPage = () => {
             </div>
             <h3 className="text-lg font-semibold mb-2">No Memberships Found</h3>
             <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-              You haven't linked any memberships yet. Start by adding your first
-              membership to manage fees and payments.
+              You haven{`'`}t linked any memberships yet. Start by adding your
+              first membership to manage fees and payments.
             </p>
             <Button className="gap-2" size="lg" asChild>
               <Link href={`/${SLUGS.CONSUMER}/memberships/add`}>

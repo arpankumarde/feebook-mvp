@@ -1,13 +1,9 @@
 import {
-  BuildingOfficeIcon,
   CreditCardIcon,
-  GearSixIcon,
   HeadsetIcon,
   LayoutIcon,
-  MathOperationsIcon,
   UserCircleIcon,
   UsersIcon,
-  WalletIcon,
 } from "@phosphor-icons/react/dist/ssr";
 
 export const ConsumerSidebarData = {

@@ -15,12 +15,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   BankIcon,
   PlusIcon,
-  ArrowRightIcon,
   StarIcon,
   CheckCircleIcon,
   ClockIcon,
   XCircleIcon,
-  InfoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { BankAccount, VerificationStatus } from "@prisma/client";
 import { APIResponse } from "@/types/common";

@@ -4,20 +4,18 @@ import { useEffect, useState } from "react";
 import ProviderTopbar from "@/components/layout/provider/ProviderTopbar";
 import { useProviderAuth } from "@/hooks/use-provider-auth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   BankIcon,
   PlusIcon,
-  CreditCardIcon,
   ShieldCheckIcon,
   CheckCircleIcon,
   ClockIcon,
   XCircleIcon,
   StarIcon,
   DotsThreeIcon,
-  PencilSimpleIcon,
   TrashIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import {

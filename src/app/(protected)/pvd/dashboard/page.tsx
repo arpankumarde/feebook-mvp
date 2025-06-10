@@ -19,7 +19,7 @@ const Page = () => {
             |
           </span>
           <p className="text-muted-foreground text-sm sm:text-base">
-            Manage your institution's dashboard here.
+            Manage your institution{`'`}s dashboard here.
           </p>
         </div>
       </ProviderTopbar>

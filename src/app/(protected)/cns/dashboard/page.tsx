@@ -17,6 +17,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { SLUGS } from "@/constants/slugs";
+import { AccountCategory } from "@prisma/client";
 
 interface DashboardData {
   statistics: {
@@ -53,7 +54,7 @@ interface DashboardData {
     memberName: string;
     memberUniqueId: string;
     providerName: string;
-    providerCategory: any;
+    providerCategory: AccountCategory;
     pendingFeesCount: number;
   }>;
 }
@@ -202,7 +203,7 @@ const ConsumerDashboard = () => {
           </div>
 
           {dashboardData.statistics.totalMemberships === 0 && (
-            <Button className="gap-2 hidden lg:inline-flex" asChild>
+            <Button className="gap-2 max-md:hidden" size={"sm"} asChild>
               <Link href={`/${SLUGS.CONSUMER}/memberships/add`}>
                 <PlusIcon size={16} weight="bold" />
                 Add Membership

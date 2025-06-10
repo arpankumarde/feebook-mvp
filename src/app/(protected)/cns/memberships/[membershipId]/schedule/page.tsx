@@ -8,7 +8,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -22,8 +21,6 @@ import {
   SpinnerGapIcon,
   UserIcon,
   BuildingsIcon,
-  PhoneIcon,
-  EnvelopeSimpleIcon,
   ClockIcon,
   CheckCircleIcon,
   WarningIcon,
@@ -165,7 +162,7 @@ const PaymentSchedulePage = () => {
   const calculateTotalAmount = () => {
     if (!membership) return 0;
     return membership.member.feePlans.reduce(
-      (total: number, plan: any) => total + Number(plan.amount),
+      (total, plan) => total + Number(plan.amount),
       0
     );
   };
@@ -173,8 +170,8 @@ const PaymentSchedulePage = () => {
   const calculatePendingAmount = () => {
     if (!membership) return 0;
     return membership.member.feePlans
-      .filter((plan: any) => plan.status !== "PAID" && !plan.isOfflinePaid)
-      .reduce((total: number, plan: any) => total + Number(plan.amount), 0);
+      .filter((plan) => plan.status !== "PAID" && !plan.isOfflinePaid)
+      .reduce((total, plan) => total + Number(plan.amount), 0);
   };
 
   if (loading) {

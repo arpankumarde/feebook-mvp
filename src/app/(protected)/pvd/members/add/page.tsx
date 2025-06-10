@@ -26,7 +26,7 @@ import {
 import { useProviderAuth } from "@/hooks/use-provider-auth";
 import ProviderTopbar from "@/components/layout/provider/ProviderTopbar";
 import { toast } from "sonner";
-import { CheckCircleIcon, UserPlusIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
 
 interface MemberFormData {
   firstName: string;
