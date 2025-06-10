@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       data: memberData,
     });
 
-    return NextResponse.json(newMember);
+    return NextResponse.json({ success: true, data: newMember });
   } catch (error) {
     return ApiErrorHandler.handlePrismaError(error);
   }
@@ -33,14 +33,14 @@ export async function GET(request: NextRequest) {
 
     if (!providerId) {
       return NextResponse.json(
-        { error: "Provider ID is required" },
+        { success: false, error: "Provider ID is required" },
         { status: 400 }
       );
     }
 
     const whereClause = {
       providerId: providerId,
-      ...(memberId && { uniqueId: memberId }),
+      ...(memberId && { id: memberId }),
     };
 
     const includeClause = {
@@ -66,16 +66,48 @@ export async function GET(request: NextRequest) {
         include: includeClause,
       });
 
-      return NextResponse.json(member);
+      return NextResponse.json({ success: true, data: member });
     } else {
       const members = await db.member.findMany({
         where: whereClause,
         include: includeClause,
       });
 
-      return NextResponse.json(members);
+      return NextResponse.json({ success: true, data: members });
     }
   } catch (error) {
     return ApiErrorHandler.handleApiError(error, "Failed to fetch members");
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { member }: { member: Member & { id: string } } =
+      await request.json();
+
+    if (!member.id) {
+      return NextResponse.json(
+        { error: "Member ID is required" },
+        { status: 400 }
+      );
+    }
+
+    let memberData = { ...member, gender: member.gender || null };
+
+    if (member.dateOfBirth) {
+      memberData = {
+        ...memberData,
+        dateOfBirth: new Date(member.dateOfBirth),
+      };
+    }
+
+    const updatedMember = await db.member.update({
+      where: { id: member.id },
+      data: memberData,
+    });
+
+    return NextResponse.json({ success: true, data: updatedMember });
+  } catch (error) {
+    return ApiErrorHandler.handlePrismaError(error);
   }
 }

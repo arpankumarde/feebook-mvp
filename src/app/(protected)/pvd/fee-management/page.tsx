@@ -3,7 +3,15 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -11,7 +19,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, PlusCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import { Member, FeePlan } from "@prisma/client";
@@ -19,6 +26,19 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useProviderAuth } from "@/hooks/use-provider-auth";
 import ProviderTopbar from "@/components/layout/provider/ProviderTopbar";
+import { APIResponse } from "@/types/common";
+import { useSearchParams } from "next/navigation";
+import {
+  MagnifyingGlassIcon,
+  PlusIcon,
+  CalendarBlankIcon,
+  UserIcon,
+  CreditCardIcon,
+  CheckCircleIcon,
+  WalletIcon,
+  WarningIcon,
+  TrashIcon,
+} from "@phosphor-icons/react/dist/ssr";
 
 interface ExtendedMember extends Member {
   feePlans: FeePlan[] | null;
@@ -41,6 +61,9 @@ const Page = () => {
     loading: isAuthLoading,
   } = useProviderAuth();
 
+  const params = useSearchParams();
+  const uniqueId = params.get("uniqueId");
+
   useEffect(() => {
     if (isAuthLoading) return;
     if (!isAuthenticated) {
@@ -48,7 +71,7 @@ const Page = () => {
     }
   }, [isAuthenticated, isAuthLoading]);
 
-  const [searchId, setSearchId] = useState("");
+  const [searchId, setSearchId] = useState(uniqueId || "");
   const [member, setMember] = useState<ExtendedMember | null>(null);
   const [loading, setLoading] = useState(false);
   const [feePlans, setFeePlans] = useState<FeePlanFormData[]>([
@@ -77,27 +100,34 @@ const Page = () => {
 
     try {
       // Search by memberId only
-      const response = await api.get(
-        `/api/v1/provider/member?providerId=${provider.id}&memberId=${searchId}`
+      const response = await api.get<APIResponse<ExtendedMember>>(
+        `/api/v1/provider/feeplan?providerId=${provider.id}&memberId=${searchId}`
       );
 
       if (!response.data) {
-        throw new Error("Student not found");
+        throw new Error("Member not found");
       }
 
-      setMember(response.data);
+      if (response.data.success && response.data.data) {
+        setMember(response.data.data);
+      }
 
       // If member has existing fee plans, populate the form
-      if (response.data.feePlans && response.data.feePlans.length > 0) {
-        const existingPlans = response.data.feePlans.map((plan: FeePlan) => ({
-          id: plan.id,
-          name: plan.name,
-          description: plan.description || "",
-          amount: plan.amount.toString(),
-          dueDate: new Date(plan.dueDate),
-          isPaid: plan.status === "PAID",
-          isDeleted: false,
-        }));
+      if (
+        response?.data?.data?.feePlans &&
+        response.data.data.feePlans.length > 0
+      ) {
+        const existingPlans = response.data.data.feePlans.map(
+          (plan: FeePlan) => ({
+            id: plan.id,
+            name: plan.name,
+            description: plan.description || "",
+            amount: plan.amount.toString(),
+            dueDate: new Date(plan.dueDate),
+            isPaid: plan.status === "PAID",
+            isDeleted: false,
+          })
+        );
         setFeePlans(existingPlans);
 
         // Store original fee plans for comparison
@@ -256,230 +286,341 @@ const Page = () => {
     }
   };
 
+  useEffect(() => {
+    // If uniqueId is provided in the URL, fetch member details automatically
+    if (uniqueId && provider?.id) {
+      setSearchId(uniqueId);
+      fetchMember();
+    }
+  }, [uniqueId, provider?.id]);
+
   return (
     <>
       <ProviderTopbar>
         <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-          <h1 className="text-xl sm:text-2xl font-semibold">Add Fee Plan</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">Fee Management</h1>
           <span className="text-2xl text-muted-foreground hidden sm:inline">
             |
           </span>
           <p className="text-muted-foreground text-sm sm:text-base">
-            Add fee plans for your members.
+            Manage member fee plans
           </p>
         </div>
       </ProviderTopbar>
 
-      <div className="p-2 sm:p-4 container py-4">
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex gap-4 items-end">
+      <div className="p-4 space-y-4">
+        {/* Search Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <MagnifyingGlassIcon
+                className="h-5 w-5 text-primary"
+                weight="duotone"
+              />
+              Search Member
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-3">
               <div className="flex-1">
-                <Label htmlFor="searchId" className="mb-2 block">
-                  Student Unique ID
-                </Label>
                 <Input
-                  id="searchId"
                   value={searchId}
                   onChange={(e) => setSearchId(e.target.value)}
-                  placeholder="Enter Student Unique ID"
+                  placeholder="Enter Member Unique ID"
+                  className="h-10"
                 />
               </div>
-              <Button onClick={fetchMember} disabled={loading || !searchId}>
-                {loading ? "Loading..." : "Fetch Details"}
+              <Button
+                onClick={fetchMember}
+                disabled={loading || !searchId}
+                size={"lg"}
+                className="w-36"
+              >
+                {loading ? (
+                  "Searching..."
+                ) : (
+                  <>
+                    <MagnifyingGlassIcon
+                      className="h-4 w-4 mr-2"
+                      weight="duotone"
+                    />
+                    Search
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>
         </Card>
 
+        {/* Error Alert */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
+          <Alert variant="destructive">
+            <WarningIcon weight="fill" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
+        {/* Success Alert */}
         {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
-            Fee plans saved successfully!
-          </div>
+          <Alert className="border-green-200 bg-green-50 text-green-900">
+            <CheckCircleIcon weight="fill" />
+            <AlertDescription className="text-inherit">
+              Fee plans saved successfully!
+            </AlertDescription>
+          </Alert>
         )}
 
         {member && (
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-4">Student Details</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="font-medium">Name</Label>
-                    <p>{`${member.firstName} ${
-                      member.middleName ? member.middleName + " " : ""
-                    }${member.lastName}`}</p>
+          <div className="space-y-4">
+            {/* Member Details Card */}
+            <Card className="gap-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <UserIcon className="h-5 w-5 text-primary" weight="duotone" />
+                  Member Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                      Full Name
+                    </Label>
+                    <p className="font-medium">
+                      {`${member.firstName} ${
+                        member.middleName ? member.middleName + " " : ""
+                      }${member.lastName}`}
+                    </p>
                   </div>
-                  <div>
-                    <Label className="font-medium">Unique ID</Label>
-                    <p>{member.uniqueId}</p>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                      Member ID
+                    </Label>
+                    <Badge variant="secondary" className="font-mono">
+                      {member.uniqueId}
+                    </Badge>
                   </div>
-                  <div>
-                    <Label className="font-medium">Phone</Label>
-                    <p>{member.phone || "N/A"}</p>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                      Phone
+                    </Label>
+                    <p className="font-medium">{member.phone || "N/A"}</p>
                   </div>
-                  <div>
-                    <Label className="font-medium">Email</Label>
-                    <p>{member.email || "N/A"}</p>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                      Email
+                    </Label>
+                    <p className="font-medium text-sm">
+                      {member.email || "N/A"}
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Fee Plans Card */}
             <Card>
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Fee Plans</h2>
-                  <Button variant="outline" size="sm" onClick={addFeePlan}>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Add Fee Plan
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <CreditCardIcon
+                      className="h-5 w-5 text-primary"
+                      weight="duotone"
+                    />
+                    Fee Plans
+                  </CardTitle>
+                  <Button size="sm" onClick={addFeePlan} className="gap-2">
+                    <PlusIcon className="size-4" weight="bold" />
+                    Add Plan
                   </Button>
                 </div>
-
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {feePlans.map(
                   (plan, index) =>
                     !plan.isDeleted && (
-                      <div key={index} className="p-4 border rounded-md mb-4">
-                        <div className="flex justify-between items-center mb-4">
-                          <h3 className="font-medium">Fee Plan {index + 1}</h3>
-                          {feePlans.length > 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeFeePlan(index)}
-                              disabled={plan.isPaid}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label
-                              htmlFor={`name-${index}`}
-                              className="mb-2 block"
-                            >
-                              Fee Type*
-                            </Label>
-                            <Input
-                              id={`name-${index}`}
-                              value={plan.name}
-                              onChange={(e) =>
-                                handleFeePlanChange(
-                                  index,
-                                  "name",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Tuition Fee"
-                              disabled={plan.isPaid}
-                              required
-                            />
+                      <Card
+                        key={index}
+                        className="border-l-4 border-l-primary gap-0"
+                      >
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <WalletIcon
+                                className="h-4 w-4 text-primary"
+                                weight="duotone"
+                              />
+                              <span className="font-medium text-sm">
+                                Fee Plan {index + 1}
+                              </span>
+                            </div>
+                            {feePlans.length > 1 && !plan.isPaid && (
+                              <Button
+                                variant="destructive"
+                                size={"icon"}
+                                onClick={() => removeFeePlan(index)}
+                                disabled={plan.isPaid}
+                              >
+                                <TrashIcon weight="bold" />
+                              </Button>
+                            )}
+                            {plan.isPaid && (
+                              <Badge className="bg-green-100 text-green-800 border-green-200">
+                                <CheckCircleIcon weight="fill" />
+                                Paid
+                              </Badge>
+                            )}
                           </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label
+                                htmlFor={`name-${index}`}
+                                className="text-xs font-medium"
+                              >
+                                Fee Type
+                                <span className="text-destructive">*</span>
+                              </Label>
+                              <Input
+                                id={`name-${index}`}
+                                value={plan.name}
+                                onChange={(e) =>
+                                  handleFeePlanChange(
+                                    index,
+                                    "name",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="e.g., Tuition Fee"
+                                disabled={plan.isPaid}
+                                className="h-9"
+                                required
+                              />
+                            </div>
 
-                          <div>
-                            <Label
-                              htmlFor={`description-${index}`}
-                              className="mb-2 block"
-                            >
-                              Description
-                            </Label>
-                            <Input
-                              id={`description-${index}`}
-                              value={plan.description}
-                              onChange={(e) =>
-                                handleFeePlanChange(
-                                  index,
-                                  "description",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="May Month"
-                              disabled={plan.isPaid}
-                            />
-                          </div>
+                            <div className="space-y-2">
+                              <Label
+                                htmlFor={`description-${index}`}
+                                className="text-xs font-medium"
+                              >
+                                Description
+                              </Label>
+                              <Input
+                                id={`description-${index}`}
+                                value={plan.description}
+                                onChange={(e) =>
+                                  handleFeePlanChange(
+                                    index,
+                                    "description",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="e.g., May Month"
+                                disabled={plan.isPaid}
+                                className="h-9"
+                              />
+                            </div>
 
-                          <div>
-                            <Label
-                              htmlFor={`amount-${index}`}
-                              className="mb-2 block"
-                            >
-                              Amount (₹)*
-                            </Label>
-                            <Input
-                              id={`amount-${index}`}
-                              type="number"
-                              value={plan.amount}
-                              onChange={(e) => {
-                                handleFeePlanChange(
-                                  index,
-                                  "amount",
-                                  e.target.value
-                                );
-                              }}
-                              step={0.01}
-                              min={1}
-                              placeholder="Enter amount"
-                              disabled={plan.isPaid}
-                              required
-                            />
-                          </div>
+                            <div className="space-y-2">
+                              <Label
+                                htmlFor={`amount-${index}`}
+                                className="text-xs font-medium"
+                              >
+                                Amount (₹)
+                                <span className="text-destructive">*</span>
+                              </Label>
+                              <Input
+                                id={`amount-${index}`}
+                                type="number"
+                                value={plan.amount}
+                                onChange={(e) =>
+                                  handleFeePlanChange(
+                                    index,
+                                    "amount",
+                                    e.target.value
+                                  )
+                                }
+                                step={0.01}
+                                min={1}
+                                placeholder="0.00"
+                                disabled={plan.isPaid}
+                                className="h-9"
+                                required
+                              />
+                            </div>
 
-                          <div>
-                            <Label
-                              htmlFor={`dueDate-${index}`}
-                              className="mb-2 block"
-                            >
-                              Due Date*
-                            </Label>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-full justify-start text-left font-normal",
-                                    !plan.dueDate && "text-muted-foreground"
-                                  )}
-                                  disabled={plan.isPaid}
+                            <div className="space-y-2">
+                              <Label
+                                htmlFor={`dueDate-${index}`}
+                                className="text-xs font-medium"
+                              >
+                                Due Date
+                                <span className="text-destructive">*</span>
+                              </Label>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full h-9 justify-start text-left font-normal",
+                                      !plan.dueDate && "text-muted-foreground"
+                                    )}
+                                    disabled={plan.isPaid}
+                                  >
+                                    <CalendarBlankIcon
+                                      className="mr-2 h-4 w-4"
+                                      weight="duotone"
+                                    />
+                                    {plan.dueDate ? (
+                                      format(plan.dueDate, "PPP")
+                                    ) : (
+                                      <span>Select date</span>
+                                    )}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-auto p-0"
+                                  align="start"
                                 >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {plan.dueDate ? (
-                                    format(plan.dueDate, "PPP")
-                                  ) : (
-                                    <span>Select date</span>
-                                  )}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                  mode="single"
-                                  selected={plan.dueDate}
-                                  onSelect={(date) =>
-                                    handleFeePlanChange(index, "dueDate", date)
-                                  }
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
+                                  <Calendar
+                                    mode="single"
+                                    selected={plan.dueDate}
+                                    onSelect={(date) =>
+                                      handleFeePlanChange(
+                                        index,
+                                        "dueDate",
+                                        date
+                                      )
+                                    }
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     )
                 )}
-
-                <div className="flex justify-end mt-6">
-                  <Button onClick={handleSubmit} disabled={loading}>
-                    {loading ? "Saving..." : "Save Fee Plans"}
-                  </Button>
-                </div>
               </CardContent>
+              <CardFooter className="flex justify-end">
+                <Button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  size={"lg"}
+                  className="w-full md:w-52"
+                >
+                  {loading ? (
+                    "Saving..."
+                  ) : (
+                    <>
+                      <CheckCircleIcon weight="fill" />
+                      Save Fee Plans
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
             </Card>
           </div>
         )}

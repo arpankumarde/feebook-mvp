@@ -3,6 +3,37 @@ import db from "@/lib/db";
 import { FeePlan } from "@prisma/client";
 import { ApiErrorHandler } from "@/lib/error-handler";
 
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const providerId = searchParams.get("providerId");
+    const memberId = searchParams.get("memberId");
+
+    if (!providerId || !memberId) {
+      return NextResponse.json(
+        { success: false, error: "Provider ID and Member ID are required" },
+        { status: 400 }
+      );
+    }
+
+    const member = await db.member.findFirst({
+      where: {
+        AND: {
+          uniqueId: memberId,
+          providerId: providerId,
+        },
+      },
+      include: {
+        feePlans: true,
+      },
+    });
+
+    return NextResponse.json({ success: true, data: member });
+  } catch (error) {
+    return ApiErrorHandler.handlePrismaError(error);
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { feePlan }: { feePlan: FeePlan } = await request.json();
