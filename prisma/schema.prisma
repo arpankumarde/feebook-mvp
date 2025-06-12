@@ -279,6 +279,15 @@ model Otp {
     @@index([expiresAt])
 }
 
+model Policy {
+    id        String   @id @default(uuid())
+    name      String
+    slug      String   @unique
+    content   String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
 enum AccountType {
     INDIVIDUAL
     ORGANIZATION
