@@ -5,6 +5,7 @@ import { AuthService } from "@/lib/auth-service";
 import { Consumer } from "@prisma/client";
 import api from "@/lib/api";
 import { toast } from "sonner";
+import { setConsumerCookie } from "@/lib/auth-utils";
 
 interface ConsumerWithMemberships extends Consumer {
   memberships?: any[];
@@ -92,6 +93,31 @@ export function useConsumerAuth() {
     }
   };
 
+  const refreshProfile = async () => {
+    try {
+      if (!consumer?.id) {
+        console.warn("No consumer ID available for refreshing profile");
+        return;
+      }
+
+      const response = await api.get("/api/v1/consumer/profile", {
+        params: { consumerId: consumer.id },
+      });
+
+      if (response.data.success) {
+        // Update consumer data in cookie
+        const updatedConsumer = {
+          ...consumer,
+          ...response.data.data,
+        };
+        setConsumerCookie(updatedConsumer);
+        setConsumer(updatedConsumer);
+      }
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+    }
+  };
+
   return {
     consumer,
     isAuthenticated: !!consumer,
@@ -106,5 +132,6 @@ export function useConsumerAuth() {
     },
     refreshMemberships,
     claimMembership,
+    refreshProfile,
   };
 }
