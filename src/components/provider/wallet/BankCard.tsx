@@ -168,7 +168,7 @@ const BankCard = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-6">
+          <div className="text-center">
             <div className="mx-auto w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mb-3">
               <BankIcon size={24} className="text-blue-600" weight="duotone" />
             </div>
@@ -177,7 +177,7 @@ const BankCard = () => {
               Add your bank account to receive fund transfers from your wallet.
             </p>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button className="gap-2" asChild>
+              <Button className="gap-2 w-full" asChild>
                 <Link href={`/${SLUGS.PROVIDER}/wallet/bank/add`}>
                   <PlusIcon size={16} weight="bold" />
                   Add Bank Account

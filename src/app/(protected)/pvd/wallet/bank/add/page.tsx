@@ -248,7 +248,7 @@ const Page = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
+                <div className="p-2 bg-muted-foreground/10 rounded-lg">
                   <BankIcon
                     size={20}
                     className="text-blue-600"
@@ -352,6 +352,7 @@ const Page = () => {
                         "font-mono pl-10",
                         errors.accName && "border-destructive"
                       )}
+                      disabled
                     />
                   </div>
                   {errors.accName && (
@@ -410,7 +411,7 @@ const Page = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
+                <div className="p-2 bg-muted-foreground/10 rounded-lg">
                   <WalletIcon
                     size={20}
                     className="text-purple-600"
@@ -517,7 +518,7 @@ const Page = () => {
                 </>
               ) : (
                 <>
-                  <CheckCircleIcon size={16} weight="bold" />
+                  <CheckCircleIcon size={16} weight="fill" />
                   Add Bank Account
                 </>
               )}
