@@ -41,6 +41,7 @@ import {
   VerificationStatus,
 } from "@prisma/client";
 import { BRAND_SUPPORT_EMAIL, BRAND_SUPPORT_PHONE } from "@/data/common/brand";
+import { setProviderCookie } from "@/lib/auth-utils";
 
 interface ExtendedProvider extends Provider {
   verification?: ProviderVerification | null;
@@ -212,8 +213,15 @@ const Page = () => {
             }
           );
 
-          if (response.data.success) {
-            setKycData(response?.data?.data || null);
+          if (response.data.success && response.data.data) {
+            setKycData(response?.data?.data);
+
+            // remove provider.verification data
+            const updatedProvider = { ...response.data.data };
+            if (updatedProvider.verification) {
+              updatedProvider.verification = null;
+            }
+            setProviderCookie(updatedProvider);
           } else {
             setError("No KYC data found");
           }
@@ -280,7 +288,7 @@ const Page = () => {
             </div>
           </div>
 
-          <Card className="border-blue-200 shadow-lg max-w-2xl mx-auto">
+          <Card className="border-blue-200 shadow-lg max-w-2xl mx-auto pt-0">
             <CardHeader className="bg-blue-600 rounded-t-xl py-4">
               <CardTitle className="flex items-center gap-3 text-white">
                 <ShieldCheckIcon size={24} weight="duotone" />
@@ -603,7 +611,7 @@ const Page = () => {
 
                   <div className="grid grid-cols-2 gap-3">
                     <Link
-                      href={`${SLUGS.PROVIDER}/members`}
+                      href={`/${SLUGS.PROVIDER}/members`}
                       className="text-center p-3 bg-green-50 rounded-lg"
                     >
                       <UserPlusIcon

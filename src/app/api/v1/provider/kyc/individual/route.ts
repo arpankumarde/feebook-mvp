@@ -80,6 +80,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    await db.provider.update({
+      where: {
+        id: providerId,
+      },
+      data: {
+        adminName: body.fullName,
+        city: body.permanentAddress.city,
+        region: body.permanentAddress.state,
+      },
+    });
+
     return NextResponse.json(
       {
         success: true,

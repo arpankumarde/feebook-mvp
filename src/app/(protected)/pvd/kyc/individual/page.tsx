@@ -30,6 +30,7 @@ import {
   CheckCircleIcon,
   WarningIcon,
   InfoIcon,
+  SpinnerGapIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { REGIONS } from "@/data/common/regions";
 import { Validator } from "format-utils";
@@ -237,7 +238,7 @@ const Page = () => {
       }
 
       const response = await api.post<APIResponse<ProviderVerification>>(
-        `/provider/kyc/individual?providerId=${provider?.id}`,
+        `/api/v1/provider/kyc/individual?providerId=${provider?.id}`,
         submitData,
         {
           headers: {
@@ -698,12 +699,12 @@ const Page = () => {
           >
             {loading ? (
               <>
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-r-transparent" />
+                <SpinnerGapIcon className="animate-spin mr-2" />
                 Submitting...
               </>
             ) : (
               <>
-                <CheckCircleIcon size={16} className="mr-2" weight="bold" />
+                <CheckCircleIcon weight="fill" />
                 Submit KYC Details
               </>
             )}

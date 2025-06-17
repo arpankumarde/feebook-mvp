@@ -129,6 +129,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    await db.provider.update({
+      where: {
+        id: providerId,
+      },
+      data: {
+        name: body.organizationName,
+        adminName: body.contactPersonName,
+        city: body.registeredAddress.city,
+        region: body.registeredAddress.state,
+      },
+    });
+
     return NextResponse.json(
       {
         success: true,

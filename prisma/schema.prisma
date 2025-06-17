@@ -12,6 +12,7 @@ model Provider {
     id                 String                @id @default(uuid())
     name               String
     type               AccountType
+    city               String?               @db.VarChar(100)
     region             String?               @db.VarChar(2)
     country            String                @default("IN") @db.VarChar(2)
     category           AccountCategory       @default(OTHER)

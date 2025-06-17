@@ -974,7 +974,7 @@ const Page = () => {
               </>
             ) : (
               <>
-                <CheckCircleIcon size={16} className="mr-2" weight="bold" />
+                <CheckCircleIcon size={16} weight="fill" />
                 Submit KYC Details
               </>
             )}
