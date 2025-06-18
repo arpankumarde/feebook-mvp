@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { ApiErrorHandler } from "@/lib/error-handler";
-import bcrypt from "bcryptjs";
 
 interface UpdateConsumerRequest {
   firstName?: string;
   lastName?: string;
   email?: string;
-  currentPassword?: string;
-  newPassword?: string;
 }
 
 export async function GET(request: NextRequest) {
@@ -103,46 +100,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Handle password update
-    let hashedNewPassword: string | undefined;
-    if (body.currentPassword && body.newPassword) {
-      // Verify current password
-      const isCurrentPasswordValid = await bcrypt.compare(
-        body.currentPassword,
-        existingConsumer.password
-      );
-
-      if (!isCurrentPasswordValid) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Current password is incorrect",
-          },
-          { status: 400 }
-        );
-      }
-
-      // Validate new password
-      if (body.newPassword.length < 6) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "New password must be at least 6 characters long",
-          },
-          { status: 400 }
-        );
-      }
-
-      hashedNewPassword = await bcrypt.hash(body.newPassword, 10);
-    }
-
     // Prepare update data (exclude phone)
     const updateData: any = {};
 
     if (body.firstName !== undefined) updateData.firstName = body.firstName;
     if (body.lastName !== undefined) updateData.lastName = body.lastName;
     if (body.email !== undefined) updateData.email = body.email;
-    if (hashedNewPassword) updateData.password = hashedNewPassword;
 
     const updatedConsumer = await db.consumer.update({
       where: { id: consumerId },

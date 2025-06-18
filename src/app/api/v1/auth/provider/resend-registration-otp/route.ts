@@ -4,54 +4,42 @@ import otpService from "@/lib/otp-service";
 
 export async function POST(request: NextRequest) {
   try {
-    const { phone } = await request.json();
+    const { email, name } = await request.json();
 
     // Validate input
-    if (!phone) {
+    if (!email) {
       return NextResponse.json(
         {
           success: false,
-          error: "Phone number is required",
-          message: "Phone number is required",
+          error: "Email is required",
+          message: "Email is required",
         },
         { status: 400 }
       );
     }
 
-    // Validate phone number format
-    const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(phone)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid phone number format",
-          message: "Phone number must be 10 digits",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Check if consumer already exists with verified phone
-    const existingConsumer = await db.consumer.findUnique({
-      where: { phone },
+    // Check if email already exists and is verified
+    const existingProvider = await db.provider.findUnique({
+      where: { email },
     });
 
-    if (existingConsumer && existingConsumer.isPhoneVerified) {
+    if (existingProvider && existingProvider.isEmailVerified) {
       return NextResponse.json(
         {
           success: false,
-          error: "Phone number already registered and verified",
-          message: "Phone number already registered and verified",
+          error: "Email already registered and verified",
+          message: "Email already registered and verified",
         },
         { status: 400 }
       );
     }
 
-    // Send OTP for phone verification
+    // Generate and send OTP for email verification
     const otpResult = await otpService.generateAndSendOTP({
-      phone,
+      email,
+      name: name || "User",
       purpose: "verification",
-      channel: "SMS",
+      channel: "EMAIL",
     });
 
     if (!otpResult.success) {

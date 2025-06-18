@@ -21,12 +21,9 @@ import {
   UserIcon,
   EnvelopeSimpleIcon,
   PhoneIcon,
-  LockIcon,
   CheckCircleIcon,
   WarningIcon,
   SpinnerGapIcon,
-  EyeIcon,
-  EyeSlashIcon,
   FloppyDiskIcon,
   XCircleIcon,
   ShieldCheckIcon,
@@ -48,9 +45,6 @@ interface FormData {
   lastName: string;
   email: string;
   phone: string;
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
 }
 
 const ProfilePage = () => {
@@ -59,18 +53,12 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -97,10 +85,6 @@ const ProfilePage = () => {
             lastName: profileData.lastName || "",
             email: profileData.email || "",
             phone: profileData.phone || "",
-
-            currentPassword: "",
-            newPassword: "",
-            confirmPassword: "",
           });
         } else {
           setError("Failed to load profile data");
@@ -130,25 +114,6 @@ const ProfilePage = () => {
     // Email validation
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Invalid email format";
-    }
-
-    // Password validation - only validate if any password field is filled
-    if (
-      formData.currentPassword ||
-      formData.newPassword ||
-      formData.confirmPassword
-    ) {
-      if (!formData.currentPassword) {
-        newErrors.currentPassword = "Current password is required";
-      }
-      if (!formData.newPassword) {
-        newErrors.newPassword = "New password is required";
-      } else if (formData.newPassword.length < 6) {
-        newErrors.newPassword = "Password must be at least 6 characters";
-      }
-      if (formData.newPassword !== formData.confirmPassword) {
-        newErrors.confirmPassword = "Passwords do not match";
-      }
     }
 
     setErrors(newErrors);
@@ -187,12 +152,6 @@ const ProfilePage = () => {
         email: formData.email || null,
       };
 
-      // Include password data only if changing password
-      if (formData.currentPassword && formData.newPassword) {
-        updateData.currentPassword = formData.currentPassword;
-        updateData.newPassword = formData.newPassword;
-      }
-
       const response = await api.put("/api/v1/consumer/profile", updateData, {
         params: { consumerId: consumer?.id },
       });
@@ -202,16 +161,6 @@ const ProfilePage = () => {
 
         // Refresh auth context
         refresh();
-
-        // Reset password fields if they were used
-        if (formData.currentPassword || formData.newPassword) {
-          setFormData((prev) => ({
-            ...prev,
-            currentPassword: "",
-            newPassword: "",
-            confirmPassword: "",
-          }));
-        }
 
         // Refresh profile data
         setProfile(response.data.data);
@@ -403,145 +352,6 @@ const ProfilePage = () => {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Security Settings */}
-            <Card className="flex-1 border-primary/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <LockIcon
-                    size={20}
-                    className="text-primary"
-                    weight="duotone"
-                  />
-                  Security Settings
-                </CardTitle>
-                <CardDescription>
-                  Change your password to keep your account secure (optional)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="currentPassword"
-                        type={showCurrentPassword ? "text" : "password"}
-                        value={formData.currentPassword}
-                        onChange={(e) =>
-                          handleInputChange("currentPassword", e.target.value)
-                        }
-                        placeholder="Enter current password"
-                        className={
-                          errors.currentPassword ? "border-destructive" : ""
-                        }
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                        onClick={() =>
-                          setShowCurrentPassword(!showCurrentPassword)
-                        }
-                      >
-                        {showCurrentPassword ? (
-                          <EyeSlashIcon size={16} />
-                        ) : (
-                          <EyeIcon size={16} />
-                        )}
-                      </Button>
-                    </div>
-                    {errors.currentPassword && (
-                      <p className="text-xs text-destructive">
-                        {errors.currentPassword}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="newPassword"
-                        type={showNewPassword ? "text" : "password"}
-                        value={formData.newPassword}
-                        onChange={(e) =>
-                          handleInputChange("newPassword", e.target.value)
-                        }
-                        placeholder="Enter new password"
-                        className={
-                          errors.newPassword ? "border-destructive" : ""
-                        }
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                      >
-                        {showNewPassword ? (
-                          <EyeSlashIcon size={16} />
-                        ) : (
-                          <EyeIcon size={16} />
-                        )}
-                      </Button>
-                    </div>
-                    {errors.newPassword && (
-                      <p className="text-xs text-destructive">
-                        {errors.newPassword}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">
-                      Confirm New Password
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={formData.confirmPassword}
-                        onChange={(e) =>
-                          handleInputChange("confirmPassword", e.target.value)
-                        }
-                        placeholder="Confirm new password"
-                        className={
-                          errors.confirmPassword ? "border-destructive" : ""
-                        }
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                      >
-                        {showConfirmPassword ? (
-                          <EyeSlashIcon size={16} />
-                        ) : (
-                          <EyeIcon size={16} />
-                        )}
-                      </Button>
-                    </div>
-                    {errors.confirmPassword && (
-                      <p className="text-xs text-destructive">
-                        {errors.confirmPassword}
-                      </p>
-                    )}
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    Leave password fields empty if you don't want to change your
-                    password
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
           </div>
           {/* Account Information */}
           <Card className="border-primary/50">
@@ -604,7 +414,7 @@ const ProfilePage = () => {
               {saving ? (
                 <SpinnerGapIcon size={16} className="animate-spin" />
               ) : (
-                <FloppyDiskIcon size={16} />
+                <FloppyDiskIcon size={16} weight="fill" />
               )}
               {saving ? "Saving..." : "Save Changes"}
             </Button>

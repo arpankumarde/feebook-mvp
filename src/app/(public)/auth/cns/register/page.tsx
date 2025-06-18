@@ -10,7 +10,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from "lucide-react";
+import { ShieldCheckIcon } from "lucide-react";
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
@@ -21,12 +21,20 @@ import { LoginResponse } from "@/types/auth";
 import { setConsumerCookie } from "@/lib/auth-utils";
 import { SLUGS } from "@/constants/slugs";
 
+interface RegistrationData {
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
+
 const Page = () => {
   const router = useRouter();
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState<RegistrationData>({
+    firstName: "",
+    lastName: "",
+    phone: "",
+  });
   const [otp, setOtp] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [step, setStep] = useState<"credentials" | "otp">("credentials");
@@ -41,30 +49,39 @@ const Page = () => {
     setLoading(true);
     setError("");
 
-    if (!validatePhoneNumber(phone)) {
-      setError("Please enter a valid 10-digit phone number");
+    if (!formData.firstName.trim()) {
+      setError("First name is required");
       setLoading(false);
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+    if (formData.firstName.trim().length < 2) {
+      setError("First name must be at least 2 characters long");
+      setLoading(false);
+      return;
+    }
+
+    if (!validatePhoneNumber(formData.phone)) {
+      setError("Please enter a valid 10-digit phone number");
       setLoading(false);
       return;
     }
 
     try {
       const response = await api.post("/api/v1/auth/consumer/register", {
-        phone,
-        password,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim() || null,
+        phone: formData.phone,
       });
 
       if (response.data.success) {
         setStep("otp");
-        toast.success("OTP sent successfully! Please verify your phone number.");
+        toast.success(
+          "OTP sent successfully! Please verify your phone number."
+        );
       } else {
-        setError(response.data.error || "Failed to register");
-        toast.error(response.data.error || "Failed to register");
+        setError(response.data.error || "Failed to send OTP");
+        toast.error(response.data.error || "Failed to send OTP");
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || "Registration failed";
@@ -90,7 +107,9 @@ const Page = () => {
       const response = await api.post<LoginResponse<Consumer>>(
         "/api/v1/auth/consumer/verify-registration",
         {
-          phone,
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim() || null,
+          phone: formData.phone,
           otp,
         }
       );
@@ -120,9 +139,12 @@ const Page = () => {
     setError("");
 
     try {
-      const response = await api.post("/api/v1/auth/consumer/resend-registration-otp", {
-        phone,
-      });
+      const response = await api.post(
+        "/api/v1/auth/consumer/resend-registration-otp",
+        {
+          phone: formData.phone,
+        }
+      );
 
       if (response.data.success) {
         toast.success("OTP sent successfully!");
@@ -142,7 +164,7 @@ const Page = () => {
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-    setPhone(value);
+    setFormData((prev) => ({ ...prev, phone: value }));
   };
 
   return (
@@ -172,18 +194,66 @@ const Page = () => {
 
             {step === "credentials" ? (
               <form onSubmit={handleRegisterAndSendOtp} className="space-y-5">
+                {/* Name Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="firstName"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      First Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      value={formData.firstName}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          firstName: e.target.value,
+                        }))
+                      }
+                      placeholder="Enter your first name"
+                      className="h-12 border-gray-300 focus:border-primary focus:ring-primary"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="lastName"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Last Name
+                    </Label>
+                    <Input
+                      id="lastName"
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          lastName: e.target.value,
+                        }))
+                      }
+                      placeholder="Enter your last name (optional)"
+                      className="h-12 border-gray-300 focus:border-primary focus:ring-primary"
+                    />
+                  </div>
+                </div>
+
                 {/* Phone Field */}
                 <div className="space-y-2">
                   <Label
                     htmlFor="phone"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Phone Number
+                    Phone Number <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="phone"
                     type="tel"
-                    value={phone}
+                    value={formData.phone}
                     onChange={handlePhoneChange}
                     placeholder="Enter 10-digit phone number"
                     className="h-12 border-gray-300 focus:border-primary focus:ring-primary"
@@ -191,43 +261,8 @@ const Page = () => {
                     required
                   />
                   <p className="text-xs text-gray-500">
-                    Enter 10-digit phone number
-                  </p>
-                </div>
-
-                {/* Password Field */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="password"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Password
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Create a secure password"
-                      className="h-12 pr-10 border-gray-300 focus:border-primary focus:ring-primary"
-                      minLength={6}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPassword ? (
-                        <EyeOffIcon className="h-5 w-5" />
-                      ) : (
-                        <EyeIcon className="h-5 w-5" />
-                      )}
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Minimum 6 characters
+                    Enter 10-digit phone number. OTP will be sent for
+                    verification.
                   </p>
                 </div>
 
@@ -237,7 +272,7 @@ const Page = () => {
                   className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-md"
                   disabled={loading}
                 >
-                  {loading ? "Creating Account..." : "Create Account"}
+                  {loading ? "Sending OTP..." : "Continue with OTP"}
                 </Button>
               </form>
             ) : (
@@ -273,7 +308,7 @@ const Page = () => {
                     </InputOTP>
                   </div>
                   <p className="text-xs text-gray-500 text-center">
-                    OTP sent to {phone}
+                    OTP sent to {formData.phone}
                   </p>
                 </div>
 
@@ -283,7 +318,7 @@ const Page = () => {
                   className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-md"
                   disabled={loading || otp.length !== 6}
                 >
-                  {loading ? "Verifying..." : "Verify & Complete Registration"}
+                  {loading ? "Verifying..." : "Complete Registration"}
                 </Button>
 
                 {/* Resend OTP */}
@@ -331,7 +366,7 @@ const Page = () => {
             {/* Security Notice */}
             <div className="mt-6 flex items-center justify-center text-xs text-gray-500">
               <ShieldCheckIcon className="h-4 w-4 mr-1" />
-              <span>Secure registration • 256-bit encryption</span>
+              <span>Secure registration • No password required</span>
             </div>
           </div>
         </div>

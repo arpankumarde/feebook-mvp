@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import db from "@/lib/db";
 import otpService from "@/lib/otp-service";
 
 export async function POST(request: NextRequest) {
-  const { phone, password } = await request.json();
+  const { firstName, lastName, phone } = await request.json();
 
   // Validate input
-  if (!phone || !password) {
+  if (!firstName || !phone) {
     return NextResponse.json(
       {
         success: false,
-        error: "Phone number and password are required",
-        message: "Phone number and password are required",
+        error: "First name and phone number are required",
+        message: "First name and phone number are required",
       },
       { status: 400 }
     );
@@ -31,13 +30,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Validate password length
-  if (password.length < 6) {
+  // Validate name length
+  if (firstName.trim().length < 2) {
     return NextResponse.json(
       {
         success: false,
-        error: "Password must be at least 6 characters long",
-        message: "Password must be at least 6 characters long",
+        error: "First name must be at least 2 characters long",
+        message: "First name must be at least 2 characters long",
       },
       { status: 400 }
     );
@@ -60,18 +59,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create consumer with unverified status
-    const newConsumer = await db.consumer.create({
-      data: {
-        phone,
-        password: hashedPassword,
-        isPhoneVerified: false,
-      },
-    });
-
-    // Send OTP for phone verification
+    // Send OTP for phone verification without creating consumer yet
     const otpResult = await otpService.generateAndSendOTP({
       phone,
       purpose: "verification",
@@ -79,11 +67,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (!otpResult.success) {
-      // If OTP sending fails, delete the created consumer
-      await db.consumer.delete({
-        where: { id: newConsumer.id },
-      });
-
       return NextResponse.json(
         {
           success: false,
@@ -98,18 +81,23 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message:
-          "Registration initiated. Please verify your phone number with the OTP sent.",
+          "OTP sent successfully. Please verify your phone number to complete registration.",
+        data: {
+          firstName,
+          lastName,
+          phone,
+        },
         expiresAt: otpResult.expiresAt,
       },
-      { status: 201 }
+      { status: 200 }
     );
   } catch (error) {
-    console.error("Error creating consumer:", error);
+    console.error("Error initiating consumer registration:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to create consumer",
-        message: "Failed to create consumer",
+        error: "Failed to initiate registration",
+        message: "Failed to initiate registration",
       },
       { status: 500 }
     );

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import db from "@/lib/db";
+import otpService from "@/lib/otp-service";
 
 export async function POST(request: NextRequest) {
   const {
@@ -26,15 +26,45 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  console.log(typeof phone);
-
   try {
-    // check if same code is used for different providers
-    const existingProvider = await db.provider.findUnique({
+    // Check if email already exists
+    const existingProviderByEmail = await db.provider.findUnique({
+      where: { email },
+    });
+
+    if (existingProviderByEmail) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Email already registered",
+          message: "Email already registered",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if phone already exists
+    const existingProviderByPhone = await db.provider.findUnique({
+      where: { phone },
+    });
+
+    if (existingProviderByPhone) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Phone number already registered",
+          message: "Phone number already registered",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if same code is used for different providers
+    const existingProviderByCode = await db.provider.findUnique({
       where: { code },
     });
 
-    if (existingProvider) {
+    if (existingProviderByCode) {
       return NextResponse.json(
         {
           success: false,
@@ -45,33 +75,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newProvider = await db.provider.create({
-      data: {
-        name,
-        adminName: adminName || name,
-        email,
-        phone,
-        password: hashedPassword,
-        code,
-        type: accountType,
-        category: category,
-      },
+    // Generate and send OTP for email verification
+    const otpResult = await otpService.generateAndSendOTP({
+      email,
+      name: adminName || name,
+      purpose: "verification",
+      channel: "EMAIL",
     });
 
+    if (!otpResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: otpResult.message,
+          message: otpResult.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    // Store registration data temporarily (you might want to use Redis or a temporary table)
+    // For now, we'll return the data to be stored on frontend
     return NextResponse.json(
       {
         success: true,
-        user: newProvider,
-        message: "Provider created successfully",
+        message:
+          "OTP sent successfully. Please verify your email to complete registration.",
+        data: {
+          name,
+          adminName: adminName || name,
+          email,
+          phone,
+          password,
+          code,
+          accountType,
+          category,
+        },
+        expiresAt: otpResult.expiresAt,
       },
-      { status: 201 }
+      { status: 200 }
     );
   } catch (error) {
-    console.error("Error creating provider:", error);
+    console.error("Error initiating provider registration:", error);
     return NextResponse.json(
-      { success: false, error, message: "Failed to create provider" },
+      {
+        success: false,
+        error: "Failed to initiate registration",
+        message: "Failed to initiate registration",
+      },
       { status: 500 }
     );
   }

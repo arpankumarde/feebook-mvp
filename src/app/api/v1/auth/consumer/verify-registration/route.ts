@@ -4,15 +4,15 @@ import otpService from "@/lib/otp-service";
 
 export async function POST(request: NextRequest) {
   try {
-    const { phone, otp } = await request.json();
+    const { firstName, lastName, phone, otp } = await request.json();
 
     // Validate input
-    if (!phone || !otp) {
+    if (!firstName || !phone || !otp) {
       return NextResponse.json(
         {
           success: false,
-          error: "Phone number and OTP are required",
-          message: "Phone number and OTP are required",
+          error: "First name, phone number and OTP are required",
+          message: "First name, phone number and OTP are required",
         },
         { status: 400 }
       );
@@ -45,26 +45,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find and update consumer to mark as verified
-    const consumer = await db.consumer.findUnique({
+    // Check if consumer already exists
+    const existingConsumer = await db.consumer.findUnique({
       where: { phone },
     });
 
-    if (!consumer) {
+    if (existingConsumer) {
       return NextResponse.json(
         {
           success: false,
-          error: "Consumer not found",
-          message: "Consumer not found",
+          error: "Consumer already exists with this phone number",
+          message: "Consumer already exists with this phone number",
         },
-        { status: 404 }
+        { status: 400 }
       );
     }
 
-    // Update consumer verification status
-    const updatedConsumer = await db.consumer.update({
-      where: { phone },
+    // Create consumer after successful OTP verification
+    const newConsumer = await db.consumer.create({
       data: {
+        firstName: firstName.trim(),
+        lastName: lastName?.trim() || null,
+        phone,
         isPhoneVerified: true,
       },
     });
@@ -72,18 +74,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        user: updatedConsumer,
-        message: "Phone number verified successfully. Registration completed!",
+        user: newConsumer,
+        message: "Registration completed successfully!",
       },
-      { status: 200 }
+      { status: 201 }
     );
   } catch (error) {
-    console.error("Error verifying registration OTP:", error);
+    console.error("Error completing consumer registration:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "An error occurred while verifying OTP",
-        message: "An error occurred while verifying OTP",
+        error: "An error occurred while completing registration",
+        message: "An error occurred while completing registration",
       },
       { status: 500 }
     );
