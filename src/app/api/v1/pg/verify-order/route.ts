@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
         source: "GETAPI",
       })
     );
-    console.log("Payment DB Format:", paymentDbFormat);
+    // console.log("Payment DB Format:", paymentDbFormat);
 
     let createdTransactions: Transaction[] = [];
     if (paymentDbFormat.length > 0) {

@@ -15,8 +15,6 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Order, OrderStatus, Transaction } from "@prisma/client";
-import { SLUGS } from "@/constants/slugs";
-import ConsumerTopbar from "@/components/layout/consumer/ConsumerTopbar";
 import {
   SpinnerGapIcon,
   CheckCircleIcon,
@@ -26,7 +24,6 @@ import {
   CreditCardIcon,
   ReceiptIcon,
   ShieldCheckIcon,
-  UsersThreeIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { formatAmount } from "@/utils/formatAmount";
 import { OrderTags } from "@/types/cfOrderTypes";
@@ -172,20 +169,6 @@ const PaymentVerifyContent = () => {
   if (loading) {
     return (
       <>
-        <ConsumerTopbar>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-            <h1 className="text-xl sm:text-2xl font-semibold">
-              Payment Status
-            </h1>
-            <span className="text-2xl text-muted-foreground hidden sm:inline">
-              |
-            </span>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Verify your payment status here
-            </p>
-          </div>
-        </ConsumerTopbar>
-
         <div className="flex items-center justify-center min-h-[400px]">
           <Card className="p-6">
             <div className="flex items-center space-x-3">
@@ -201,20 +184,6 @@ const PaymentVerifyContent = () => {
   if (error || !orderData) {
     return (
       <>
-        <ConsumerTopbar>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-            <h1 className="text-xl sm:text-2xl font-semibold">
-              Payment Status
-            </h1>
-            <span className="text-2xl text-muted-foreground hidden sm:inline">
-              |
-            </span>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Verify your payment status here
-            </p>
-          </div>
-        </ConsumerTopbar>
-
         <div className="max-w-2xl mx-auto p-6">
           <Alert variant="destructive">
             <XCircleIcon size={16} />
@@ -244,18 +213,6 @@ const PaymentVerifyContent = () => {
 
   return (
     <>
-      <ConsumerTopbar>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-          <h1 className="text-xl sm:text-2xl font-semibold">Payment Status</h1>
-          <span className="text-2xl text-muted-foreground hidden sm:inline">
-            |
-          </span>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Verify your payment status here
-          </p>
-        </div>
-      </ConsumerTopbar>
-
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         {/* Payment Status Card */}
         <Card className={`${statusInfo.borderColor} ${statusInfo.bgColor}`}>
@@ -372,16 +329,9 @@ const PaymentVerifyContent = () => {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
           <Button variant="outline" className="gap-2 flex-1" asChild>
-            <Link href={`/${SLUGS.CONSUMER}/dashboard`}>
+            <Link href={`/`}>
               <ArrowLeftIcon size={16} />
-              Go to Dashboard
-            </Link>
-          </Button>
-
-          <Button asChild className="gap-2 flex-1">
-            <Link href={`/${SLUGS.CONSUMER}/memberships`}>
-              <UsersThreeIcon size={16} />
-              View Memberships
+              Go to Home
             </Link>
           </Button>
 
@@ -408,7 +358,7 @@ const PaymentVerifyContent = () => {
   );
 };
 
-const PaymentVerifyPage = () => {
+const Page = () => {
   return (
     <Suspense
       fallback={
@@ -422,4 +372,4 @@ const PaymentVerifyPage = () => {
   );
 };
 
-export default PaymentVerifyPage;
+export default Page;
