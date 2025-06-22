@@ -48,7 +48,6 @@ import api from "@/lib/api";
 import { toast } from "sonner";
 import { formatAmount } from "@/utils/formatAmount";
 import {
-  CreditCardIcon,
   DownloadIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -61,12 +60,11 @@ import {
   CurrencyInrIcon,
   FunnelIcon,
   SpinnerGapIcon,
-  WarningIcon,
+  WarningCircleIcon,
   FlagPennantIcon,
   CaretRightIcon,
   CaretLeftIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { AlertCircleIcon } from "lucide-react";
 import { PaymentStatus, Transaction } from "@prisma/client";
 
 interface PaymentData extends Transaction {
@@ -307,7 +305,7 @@ const Page = () => {
         {/* Error Alert */}
         {error && (
           <Alert variant="destructive">
-            <AlertCircleIcon size={16} />
+            <WarningCircleIcon size={16} />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}

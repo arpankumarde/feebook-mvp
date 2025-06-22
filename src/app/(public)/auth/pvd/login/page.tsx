@@ -10,7 +10,11 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from "lucide-react";
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  ShieldCheckIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
@@ -196,7 +200,7 @@ const Page = () => {
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
                       {showPassword ? (
-                        <EyeOffIcon className="h-5 w-5" />
+                        <EyeSlashIcon className="h-5 w-5" />
                       ) : (
                         <EyeIcon className="h-5 w-5" />
                       )}

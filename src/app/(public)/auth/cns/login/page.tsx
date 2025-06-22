@@ -10,7 +10,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { ShieldCheckIcon } from "lucide-react";
+import { ShieldCheckIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
@@ -287,7 +287,7 @@ const Page = () => {
 
             {/* Security Notice */}
             <div className="mt-6 flex items-center justify-center text-xs text-gray-500">
-              <ShieldCheckIcon className="h-4 w-4 mr-1" />
+              <ShieldCheckIcon className="h-4 w-4 mr-1" weight="bold" />
               <span>Secure login • 256-bit encryption</span>
             </div>
           </div>

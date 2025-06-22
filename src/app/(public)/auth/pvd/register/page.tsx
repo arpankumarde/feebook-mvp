@@ -18,7 +18,11 @@ import { setProviderCookie } from "@/lib/auth-utils";
 import { SLUGS } from "@/constants/slugs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
-import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from "lucide-react";
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  ShieldCheckIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { LoginResponse } from "@/types/auth";
@@ -72,7 +76,10 @@ const Page = () => {
         code: genShortCode(propData.name),
       };
 
-      const response = await api.post("/api/v1/auth/provider/register", propData);
+      const response = await api.post(
+        "/api/v1/auth/provider/register",
+        propData
+      );
 
       if (response.data.success) {
         // Store form data for verification step
@@ -138,10 +145,13 @@ const Page = () => {
     setError("");
 
     try {
-      const response = await api.post("/api/v1/auth/provider/resend-registration-otp", {
-        email: formData.email,
-        name: formData.adminName || formData.name,
-      });
+      const response = await api.post(
+        "/api/v1/auth/provider/resend-registration-otp",
+        {
+          email: formData.email,
+          name: formData.adminName || formData.name,
+        }
+      );
 
       if (response.data.success) {
         toast.success("OTP sent successfully!");
@@ -333,7 +343,7 @@ const Page = () => {
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
                       {showPassword ? (
-                        <EyeOffIcon className="h-5 w-5" />
+                        <EyeSlashIcon className="h-5 w-5" />
                       ) : (
                         <EyeIcon className="h-5 w-5" />
                       )}
@@ -440,7 +450,7 @@ const Page = () => {
 
             {/* Security Notice */}
             <div className="mt-6 flex items-center justify-center text-xs text-gray-500">
-              <ShieldCheckIcon className="h-4 w-4 mr-1" />
+              <ShieldCheckIcon className="h-4 w-4 mr-1" weight="bold" />
               <span>Secure registration • Email verification required</span>
             </div>
           </div>

@@ -36,7 +36,7 @@ import { BankAccount } from "@prisma/client";
 import { Validator } from "format-utils";
 import { toast } from "sonner";
 import Link from "next/link";
-import { HashIcon } from "lucide-react";
+import { HashIcon } from "@phosphor-icons/react/dist/ssr";
 
 interface BankAccountFormData {
   accNumber: string;

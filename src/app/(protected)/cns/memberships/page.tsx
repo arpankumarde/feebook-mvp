@@ -15,17 +15,20 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useConsumerAuth } from "@/hooks/use-consumer-auth";
 import api from "@/lib/api";
-import { Loader2, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { SLUGS } from "@/constants/slugs";
 import Link from "next/link";
 import {
   BarbellIcon,
   BuildingOfficeIcon,
+  CheckCircleIcon,
+  ClockIcon,
   EyeIcon,
   GraduationCapIcon,
   PlusIcon,
+  SpinnerGapIcon,
   StorefrontIcon,
   UsersThreeIcon,
+  WarningCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { AccountCategory } from "@prisma/client";
 
@@ -105,7 +108,7 @@ const MembershipsPage = () => {
     if (hasOverdueFees) {
       return (
         <Badge variant="destructive" className="gap-1">
-          <AlertCircle className="h-3 w-3" />
+          <WarningCircleIcon className="h-3 w-3" />
           Overdue
         </Badge>
       );
@@ -113,14 +116,14 @@ const MembershipsPage = () => {
     if (hasOutstandingFees) {
       return (
         <Badge variant="secondary" className="gap-1">
-          <Clock className="h-3 w-3" />
+          <ClockIcon className="h-3 w-3" />
           {pendingCount} Pending
         </Badge>
       );
     }
     return (
       <Badge variant="default" className="gap-1 bg-green-600">
-        <CheckCircle2 className="h-3 w-3" />
+        <CheckCircleIcon className="h-3 w-3" />
         All Paid
       </Badge>
     );
@@ -143,7 +146,7 @@ const MembershipsPage = () => {
 
         <div className="p-4 flex items-center justify-center min-h-64">
           <div className="flex items-center space-x-2">
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <SpinnerGapIcon size={24} className="animate-spin text-primary" />
             <span className="text-muted-foreground">
               Loading your memberships...
             </span>
@@ -178,7 +181,7 @@ const MembershipsPage = () => {
       <div className="p-4 space-y-6">
         {error && (
           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
+            <WarningCircleIcon className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
