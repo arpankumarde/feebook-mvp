@@ -328,7 +328,7 @@ const PaymentVerifyContent = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button variant="outline" className="gap-2 flex-1" asChild>
+          <Button variant="outline" className="flex-1" size={"lg"} asChild>
             <Link href={`/`}>
               <ArrowLeftIcon size={16} />
               Go to Home
@@ -337,8 +337,8 @@ const PaymentVerifyContent = () => {
 
           {orderData.status === "PAID" && (
             <Button
-              variant="secondary"
-              className="gap-2 flex-1"
+              className="flex-1"
+              size={"lg"}
               onClick={() => {
                 if (receiptUrl) {
                   // Download receipt if available

@@ -48,10 +48,10 @@ export async function GET(request: NextRequest) {
         name: true,
         code: true,
         category: true,
-        region: true,
         type: true,
-        email: true,
-        phone: true,
+        city: true,
+        region: true,
+        country: true,
       },
       orderBy: [
         {

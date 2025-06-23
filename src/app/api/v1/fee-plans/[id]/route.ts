@@ -11,9 +11,9 @@ export async function GET(
 
     if (!id) {
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: "Fee plan ID is required" 
+          error: "Fee plan ID is required",
         },
         { status: 400 }
       );
@@ -22,19 +22,7 @@ export async function GET(
     const feePlanDetails = await db.feePlan.findUnique({
       where: { id },
       include: {
-        member: {
-          include: {
-            provider: {
-              select: {
-                id: true,
-                name: true,
-                code: true,
-                type: true,
-                category: true,
-              },
-            },
-          },
-        },
+        member: true,
         provider: {
           select: {
             id: true,
@@ -42,6 +30,9 @@ export async function GET(
             code: true,
             type: true,
             category: true,
+            city: true,
+            region: true,
+            country: true,
           },
         },
       },
@@ -49,9 +40,9 @@ export async function GET(
 
     if (!feePlanDetails) {
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: "Fee plan not found" 
+          error: "Fee plan not found",
         },
         { status: 404 }
       );
@@ -69,6 +60,7 @@ export async function GET(
           dueDate: feePlanDetails.dueDate,
           isOfflinePaid: feePlanDetails.isOfflinePaid,
           consumerClaimsPaid: feePlanDetails.consumerClaimsPaid,
+          receipt: feePlanDetails.receipt,
         },
         member: feePlanDetails.member,
         provider: feePlanDetails.provider,

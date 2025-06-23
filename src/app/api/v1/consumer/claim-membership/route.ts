@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "Membership claimed successfully",
       data: {
-        membershipId: newMembership.id,
+        id: newMembership.id,
         member: newMembership.member,
         claimedAt: newMembership.claimedAt,
         pendingFeePlans: newMembership.member.feePlans.length,

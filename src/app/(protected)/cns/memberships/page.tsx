@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -123,7 +124,7 @@ const MembershipsPage = () => {
     }
     return (
       <Badge variant="default" className="gap-1 bg-green-600">
-        <CheckCircleIcon className="h-3 w-3" />
+        <CheckCircleIcon className="h-3 w-3" weight="fill" />
         All Paid
       </Badge>
     );
@@ -234,7 +235,7 @@ const MembershipsPage = () => {
                   key={membership.id}
                   className="hover:shadow-md transition-shadow"
                 >
-                  <CardHeader className="pb-3">
+                  <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center bg-muted-foreground/5 text-primary rounded-lg p-2">
@@ -268,29 +269,10 @@ const MembershipsPage = () => {
                           .toLowerCase()}
                       </p>
                     </div>
+                  </CardContent>
 
-                    <Separator />
-
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        Joined:{" "}
-                        {new Date(membership.claimedAt).toLocaleDateString()}
-                      </span>
-                      {membership.hasOutstandingFees && (
-                        <span
-                          className={`font-medium ${
-                            membership.hasOverdueFees
-                              ? "text-destructive"
-                              : "text-orange-600"
-                          }`}
-                        >
-                          {membership.pendingFeePlansCount}{" "}
-                          {membership.hasOverdueFees ? "overdue" : "pending"}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
+                  <CardFooter className="border-t-2 pt-4">
+                    <div className="flex gap-2 w-full">
                       {/* Always show View Details button */}
                       <Button
                         size="sm"
@@ -328,7 +310,7 @@ const MembershipsPage = () => {
                         </Button>
                       )}
                     </div>
-                  </CardContent>
+                  </CardFooter>
                 </Card>
               ))}
             </div>

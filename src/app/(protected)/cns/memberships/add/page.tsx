@@ -21,14 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import ConsumerTopbar from "@/components/layout/consumer/ConsumerTopbar";
 import { toast } from "sonner";
 import { SLUGS } from "@/constants/slugs";
 import { REGIONS } from "@/data/common/regions";
-import { AccountCategory } from "@prisma/client";
+import { AccountCategory, FeePlan, Member, Provider } from "@prisma/client";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -38,15 +37,13 @@ import {
   UserIcon,
   BuildingOfficeIcon,
   MapPinIcon,
-  IdentificationCardIcon,
   GraduationCapIcon,
   BarbellIcon,
   UsersThreeIcon,
   StorefrontIcon,
-  PhoneIcon,
-  EnvelopeSimpleIcon,
   WarningIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import { APIResponse } from "@/types/common";
 
 interface ProviderSearchResult {
   id: string;
@@ -55,8 +52,8 @@ interface ProviderSearchResult {
   category: AccountCategory;
   region: string;
   type: string;
-  email: string;
-  phone: string;
+  city: string;
+  country: string;
 }
 
 interface MemberDetails {
@@ -73,6 +70,13 @@ interface MemberDetails {
     name: string;
     category: string;
   };
+}
+
+interface ClaimMembershipResponse {
+  id: string;
+  member: Member & { provider?: Provider } & { feePlans?: FeePlan[] };
+  claimedAt: Date;
+  pendingFeePlans?: number;
 }
 
 type Step = "category" | "region" | "provider" | "member" | "review";
@@ -186,7 +190,7 @@ const AddMembershipPage = () => {
       const response = await api.get("/api/v1/provider/member/by-uniqueid", {
         params: {
           providerId: selectedProvider.id,
-          uniqueId: memberUniqueId.trim(),
+          uniqueId: memberUniqueId.trim().toUpperCase(),
         },
       });
 
@@ -208,15 +212,20 @@ const AddMembershipPage = () => {
       setLoading(true);
       setError(null);
 
-      const response = await api.post("/api/v1/consumer/claim-membership", {
-        consumerId: consumer.id,
-        providerId: selectedProvider.id,
-        memberUniqueId: memberDetails.uniqueId,
-      });
+      const response = await api.post<APIResponse<ClaimMembershipResponse>>(
+        "/api/v1/consumer/claim-membership",
+        {
+          consumerId: consumer.id,
+          providerId: selectedProvider.id,
+          memberUniqueId: memberDetails.uniqueId,
+        }
+      );
 
       if (response.data.success) {
         toast.success("Membership linked successfully!");
-        router.push(`/${SLUGS.CONSUMER}/memberships`);
+        router.push(
+          `/${SLUGS.CONSUMER}/memberships/${response?.data?.data?.id}/schedule`
+        );
       } else {
         throw new Error(response.data.error || "Failed to link membership");
       }
@@ -308,7 +317,7 @@ const AddMembershipPage = () => {
                   value={selectedRegion}
                   onValueChange={setSelectedRegion}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full !h-12">
                     <SelectValue placeholder="Select your state" />
                   </SelectTrigger>
                   <SelectContent>
@@ -396,12 +405,10 @@ const AddMembershipPage = () => {
                         <div>
                           <h4 className="font-medium">{provider.name}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Code: {provider.code}
+                            Address: {provider.city}, {provider.region},{" "}
+                            {provider.country}
                           </p>
                         </div>
-                        <Badge variant="outline" className="capitalize">
-                          {provider.type.toLowerCase()}
-                        </Badge>
                       </div>
                     </div>
                   ))}
@@ -418,16 +425,11 @@ const AddMembershipPage = () => {
                       <span>{selectedProvider.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <IdentificationCardIcon size={16} />
-                      <span>Code: {selectedProvider.code}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <PhoneIcon size={16} />
-                      <span>{selectedProvider.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <EnvelopeSimpleIcon size={16} />
-                      <span>{selectedProvider.email}</span>
+                      <MapPinIcon size={16} />
+                      <span>
+                        Address: {selectedProvider?.city},{" "}
+                        {selectedProvider?.region}, {selectedProvider?.country}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -558,18 +560,6 @@ const AddMembershipPage = () => {
                       </span>
                     </div>
                   )}
-                  {memberDetails?.phone && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Phone:</span>
-                      <span>{memberDetails.phone}</span>
-                    </div>
-                  )}
-                  {memberDetails?.email && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Email:</span>
-                      <span>{memberDetails.email}</span>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -584,16 +574,11 @@ const AddMembershipPage = () => {
                     <span>{selectedProvider?.name}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Code:</span>
-                    <span>{selectedProvider?.code}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Category:</span>
-                    <Badge variant="outline" className="capitalize">
-                      {selectedProvider?.category
-                        .replace("_", " ")
-                        .toLowerCase()}
-                    </Badge>
+                    <span className="text-sm font-medium">Address:</span>
+                    <span>
+                      {selectedProvider?.city}, {selectedProvider?.region},{" "}
+                      {selectedProvider?.country}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -615,15 +600,11 @@ const AddMembershipPage = () => {
                   <ArrowLeftIcon size={16} />
                   Back
                 </Button>
-                <Button
-                  onClick={handleSubmitMembership}
-                  disabled={loading}
-                  className="gap-2"
-                >
+                <Button onClick={handleSubmitMembership} disabled={loading}>
                   {loading ? (
                     <SpinnerGapIcon size={16} className="animate-spin" />
                   ) : (
-                    <CheckCircleIcon size={16} />
+                    <CheckCircleIcon size={16} weight="fill" />
                   )}
                   Add Membership
                 </Button>

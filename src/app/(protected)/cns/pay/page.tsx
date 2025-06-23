@@ -25,12 +25,12 @@ import {
   EnvelopeSimpleIcon,
   PhoneIcon,
   ShieldCheckIcon,
-  LinkIcon,
   ReceiptIcon,
   FilePdfIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import ConsumerTopbar from "@/components/layout/consumer/ConsumerTopbar";
 import { formatAmount } from "@/utils/formatAmount";
+import { APIResponse } from "@/types/common";
 
 interface PaymentPageData {
   feePlan: {
@@ -40,6 +40,9 @@ interface PaymentPageData {
     amount: number;
     status: string;
     dueDate: string;
+    isOfflinePaid?: boolean;
+    consumerClaimsPaid?: boolean;
+    receipt?: string;
   };
   member: {
     id: string;
@@ -58,10 +61,9 @@ interface PaymentPageData {
     code: string;
     category: string;
     type: string;
-  };
-  membership?: {
-    id: string;
-    claimedAt: string;
+    city: string;
+    region: string;
+    country: string;
   };
 }
 
@@ -100,73 +102,15 @@ const PayNowPageContent = () => {
         setError(null);
 
         // Fetch fee plan details using the new API
-        const response = await api.get(`/api/v1/fee-plans/${feePlanId}`);
+        const response = await api.get<APIResponse<PaymentPageData>>(
+          `/api/v1/fee-plans/${feePlanId}`
+        );
 
-        if (!response.data.success) {
+        if (!response.data.success || !response.data.data) {
           throw new Error(response.data.error || "Fee plan not found");
         }
 
-        const { feePlan, member, provider } = response.data.data;
-
-        const paymentInfo: PaymentPageData = {
-          feePlan: {
-            id: feePlan.id,
-            name: feePlan.name,
-            description: feePlan.description,
-            amount: Number(feePlan.amount),
-            status: feePlan.status,
-            dueDate: feePlan.dueDate,
-          },
-          member: {
-            id: member.id,
-            uniqueId: member.uniqueId,
-            firstName: member.firstName,
-            middleName: member.middleName,
-            lastName: member.lastName,
-            email: member.email,
-            phone: member.phone,
-            category: member.category,
-            subcategory: member.subcategory,
-          },
-          provider: {
-            id: provider.id,
-            name: provider.name,
-            code: provider.code,
-            category: provider.category,
-            type: provider.type,
-          },
-        };
-
-        // Check if consumer has claimed this membership
-        if (consumer?.id) {
-          try {
-            const membershipResponse = await api.get(
-              "/api/v1/consumer/memberships",
-              {
-                params: {
-                  consumerId: consumer.id,
-                },
-              }
-            );
-
-            const existingMembership =
-              membershipResponse.data.memberships?.find(
-                (m: any) => m.member.id === member.id
-              );
-
-            if (existingMembership) {
-              paymentInfo.membership = {
-                id: existingMembership.id,
-                claimedAt: existingMembership.claimedAt,
-              };
-            }
-          } catch (err) {
-            // Membership check failed, continue without membership info
-            console.warn("Could not check membership status:", err);
-          }
-        }
-
-        setPaymentData(paymentInfo);
+        setPaymentData(response.data.data);
       } catch (err: any) {
         console.error("Error fetching payment details:", err);
         setError(
@@ -403,8 +347,8 @@ const PayNowPageContent = () => {
         </div>
       </ConsumerTopbar>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 min-h-screen p-2">
-        <div className="cols-span-1 md:col-span-8 p-4 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 p-2">
+        <div className="cols-span-1 lg:col-span-8 p-4 space-y-6">
           {/* Payment Summary Card */}
           <Card className="border-2 shadow-sm">
             <CardHeader>
@@ -425,7 +369,7 @@ const PayNowPageContent = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl sm:text-3xl font-bold text-primary">
+                  <p className="text-2xl sm:text-3xl font-bold text-primary font-mono">
                     {formatAmount(paymentData.feePlan.amount)}
                   </p>
                 </div>
@@ -467,34 +411,17 @@ const PayNowPageContent = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
+                <div className="space-y-4">
                   <p className="font-semibold text-lg">{memberName}</p>
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
                     <span className="font-medium">Member ID:</span>
-                    {paymentData.member.uniqueId}
+                    <span className="text-black">
+                      {paymentData.member.uniqueId}
+                    </span>
                   </p>
                 </div>
 
                 <div className="space-y-3">
-                  {paymentData.member.email && (
-                    <div className="flex items-center gap-3">
-                      <EnvelopeSimpleIcon
-                        size={16}
-                        className="text-muted-foreground"
-                      />
-                      <span className="text-sm">
-                        {paymentData.member.email}
-                      </span>
-                    </div>
-                  )}
-                  {paymentData.member.phone && (
-                    <div className="flex items-center gap-3">
-                      <PhoneIcon size={16} className="text-muted-foreground" />
-                      <span className="text-sm">
-                        {paymentData.member.phone}
-                      </span>
-                    </div>
-                  )}
                   {paymentData.member.category && (
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-medium text-muted-foreground">
@@ -525,10 +452,6 @@ const PayNowPageContent = () => {
                   <p className="font-semibold text-lg">
                     {paymentData.provider.name}
                   </p>
-                  <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <span className="font-medium">Code:</span>
-                    {paymentData.provider.code}
-                  </p>
                 </div>
 
                 <div className="space-y-3">
@@ -544,57 +467,20 @@ const PayNowPageContent = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-muted-foreground">
-                      Type:
+                      Address:
                     </span>
                     <span className="text-sm capitalize">
-                      {paymentData.provider.type.toLowerCase()}
+                      {paymentData.provider.city}, {paymentData.provider.region}
+                      , {paymentData.provider.country}
                     </span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-
-          {/* Membership Status */}
-          {consumer && (
-            <Card className="border-2 shadow-sm">
-              <CardContent>
-                <div className="flex flex-col md:flex-row items-center justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-50 rounded-lg">
-                      <LinkIcon size={20} className="text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">Membership Status</p>
-                      <p className="text-sm text-muted-foreground">
-                        {paymentData.membership
-                          ? `Claimed on ${new Date(
-                              paymentData.membership.claimedAt
-                            ).toLocaleDateString()}`
-                          : "Not claimed to your account"}
-                      </p>
-                    </div>
-                  </div>
-                  {!paymentData.membership && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                      className="gap-2"
-                    >
-                      <Link href={`/${SLUGS.CONSUMER}/memberships`}>
-                        <LinkIcon size={16} />
-                        Claim Membership
-                      </Link>
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
-        <div className="cols-span-1 md:col-span-4 p-4 w-full">
+        <div className="cols-span-1 lg:col-span-4 p-4 w-full">
           {/* Payment Actions */}
           <Card className="border-2 shadow-lg">
             <CardContent>
@@ -620,9 +506,13 @@ const PayNowPageContent = () => {
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Button
                       className="bg-green-600 hover:bg-green-700 w-full"
+                      size={"lg"}
                       asChild
                     >
-                      <Link href={`#`}>
+                      <Link
+                        href={paymentData?.feePlan?.receipt || "#"}
+                        target="_blank"
+                      >
                         <FilePdfIcon size={16} weight="bold" />
                         View Receipt
                       </Link>

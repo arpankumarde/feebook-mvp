@@ -129,6 +129,8 @@ model Member {
   gender              Gender?
   phone               String           @db.VarChar(10)
   email               String?
+  active              Boolean          @default(true)
+  session             String?          @default("2024-25") @db.VarChar(10)
   category            String?
   subcategory         String?
   guardianName        String?

@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { REGIONS } from "@/data/common/regions";
@@ -34,13 +33,10 @@ import {
   UserIcon,
   BuildingOfficeIcon,
   MapPinIcon,
-  IdentificationCardIcon,
   GraduationCapIcon,
   BarbellIcon,
   UsersThreeIcon,
   StorefrontIcon,
-  PhoneIcon,
-  EnvelopeSimpleIcon,
   WarningIcon,
   CreditCardIcon,
 } from "@phosphor-icons/react/dist/ssr";
@@ -52,8 +48,8 @@ interface ProviderSearchResult {
   category: AccountCategory;
   region: string;
   type: string;
-  email: string;
-  phone: string;
+  city: string;
+  country: string;
 }
 
 type DirectPayStep = "category" | "region" | "provider" | "member";
@@ -163,7 +159,7 @@ const Page = () => {
       const response = await api.get("/api/v1/provider/member/by-uniqueid", {
         params: {
           providerId: selectedProvider.id,
-          uniqueId: memberUniqueId.trim(),
+          uniqueId: memberUniqueId.trim().toUpperCase(),
         },
       });
 
@@ -261,7 +257,7 @@ const Page = () => {
                   value={selectedRegion}
                   onValueChange={setSelectedRegion}
                 >
-                  <SelectTrigger id="region-select">
+                  <SelectTrigger id="region-select" className="w-full !h-12">
                     <SelectValue placeholder="Select your state" />
                   </SelectTrigger>
                   <SelectContent>
@@ -349,12 +345,10 @@ const Page = () => {
                         <div>
                           <h4 className="font-medium">{providerResult.name}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Code: {providerResult.code}
+                            Address: {providerResult.city},{" "}
+                            {providerResult.region}, {providerResult.country}
                           </p>
                         </div>
-                        <Badge variant="outline" className="capitalize">
-                          {providerResult.type.toLowerCase()}
-                        </Badge>
                       </div>
                     </div>
                   ))}
@@ -371,16 +365,11 @@ const Page = () => {
                       <span>{selectedProvider.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <IdentificationCardIcon size={16} />
-                      <span>Code: {selectedProvider.code}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <PhoneIcon size={16} />
-                      <span>{selectedProvider.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <EnvelopeSimpleIcon size={16} />
-                      <span>{selectedProvider.email}</span>
+                      <MapPinIcon size={16} />
+                      <span>
+                        Address: {selectedProvider.city},{" "}
+                        {selectedProvider.region}, {selectedProvider.country}
+                      </span>
                     </div>
                   </div>
                 </div>

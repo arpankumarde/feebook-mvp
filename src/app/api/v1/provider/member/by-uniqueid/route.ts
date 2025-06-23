@@ -19,7 +19,10 @@ export async function GET(request: NextRequest) {
     const member = await db.member.findFirst({
       where: {
         providerId,
-        uniqueId,
+        uniqueId: {
+          equals: uniqueId,
+          mode: "insensitive",
+        },
       },
       select: {
         id: true,

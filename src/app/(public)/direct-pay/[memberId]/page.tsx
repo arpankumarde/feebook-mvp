@@ -31,6 +31,7 @@ import {
   ClockIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { APIResponse } from "@/types/common";
+import { formatAmount } from "@/utils/formatAmount";
 
 interface MemberWithProvider extends Member {
   provider: Provider;
@@ -284,7 +285,7 @@ const DirectPayMemberPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
               <div className="space-y-3">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
@@ -304,7 +305,7 @@ const DirectPayMemberPage = () => {
                   <p className="text-sm font-medium text-muted-foreground">
                     Member ID
                   </p>
-                  <p className="font-medium">{memberData.uniqueId}</p>
+                  <p className="font-medium uppercase">{memberData.uniqueId}</p>
                 </div>
                 {memberData.category && (
                   <div>
@@ -327,16 +328,12 @@ const DirectPayMemberPage = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
-                    Institution Code
+                    Institution Address
                   </p>
-                  <p className="font-medium">{memberData.provider.code}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Contact
+                  <p className="font-medium">
+                    {memberData?.provider?.city} {memberData?.provider?.region},{" "}
+                    {memberData?.provider?.country}
                   </p>
-                  <p className="text-sm">{memberData.provider.email}</p>
-                  <p className="text-sm">{memberData.provider.phone}</p>
                 </div>
               </div>
             </div>
@@ -395,12 +392,8 @@ const DirectPayMemberPage = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 text-sm">
                         <div className="flex items-center gap-1">
-                          <CurrencyInrIcon
-                            size={16}
-                            className="text-muted-foreground"
-                          />
                           <span className="font-medium">
-                            ₹{Number(feePlan.amount).toLocaleString()}
+                            {formatAmount(Number(feePlan.amount))}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -428,9 +421,9 @@ const DirectPayMemberPage = () => {
                         {isPaymentProcessing ? (
                           <SpinnerGapIcon size={16} className="animate-spin" />
                         ) : (
-                          <CreditCardIcon size={16} />
+                          <CreditCardIcon size={16} weight="fill" />
                         )}
-                        Pay ₹{Number(feePlan.amount).toLocaleString()}
+                        Pay {formatAmount(Number(feePlan.amount))}
                       </Button>
                     </div>
                   </div>
@@ -441,9 +434,9 @@ const DirectPayMemberPage = () => {
         </Card>
 
         {/* Important Information */}
-        <Alert>
-          <InfoIcon size={16} />
-          <AlertDescription>
+        <Alert className="bg-green-100">
+          <InfoIcon size={16} className="text-green-800" />
+          <AlertDescription className="text-black">
             <strong>Secure Payment:</strong> All payments are processed securely
             through our certified payment gateway. You will receive a receipt
             via email after successful payment.
