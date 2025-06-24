@@ -119,7 +119,7 @@ const Page = () => {
       if (success && user) {
         setConsumerCookie(user);
         toast.success("Registration successful! Welcome to FeeBook!");
-        router.push(`/${SLUGS.CONSUMER}/dashboard`);
+        router.push(`/${SLUGS.CONSUMER}/profile/capture`);
       } else {
         setError(apiError || "OTP verification failed");
         toast.error(apiError || "OTP verification failed");
