@@ -48,17 +48,6 @@ import { formatAmount } from "@/utils/formatAmount";
 
 interface MemberWithDetails extends Member {
   feePlans: FeePlan[];
-  consumerMemberships: Array<{
-    id: string;
-    claimedAt: string;
-    consumer: {
-      id: string;
-      firstName: string;
-      lastName: string;
-      phone?: string;
-      email?: string;
-    };
-  }>;
 }
 
 const MemberDetailPage = () => {
@@ -249,13 +238,14 @@ const MemberDetailPage = () => {
               variant="outline"
               onClick={() => router.back()}
               className="gap-2"
+              size={"sm"}
             >
               <ArrowLeftIcon size={16} />
               Back
             </Button>
-            <Button className="gap-2" asChild>
+            <Button className="gap-2" asChild size={"sm"}>
               <Link href={`/${SLUGS.PROVIDER}/members/edit/${member.id}`}>
-                <PencilIcon size={16} />
+                <PencilIcon size={16} weight="fill" />
                 Edit Member
               </Link>
             </Button>
@@ -274,7 +264,7 @@ const MemberDetailPage = () => {
                 Basic Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
@@ -390,7 +380,7 @@ const MemberDetailPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <div className="text-center p-4 bg-muted/60 rounded-lg">
                 <p className="text-sm text-muted-foreground mb-2">
                   Total Pending Amount
                 </p>
@@ -412,45 +402,6 @@ const MemberDetailPage = () => {
                   </p>
                   <p className="text-xs text-muted-foreground">Pending</p>
                 </div>
-              </div>
-
-              <Separator />
-
-              {/* App Link Status */}
-              <div className="space-y-3">
-                <h4 className="font-medium text-sm">App Connection</h4>
-                {member.consumerMemberships.length > 0 ? (
-                  <div className="space-y-2">
-                    <Badge
-                      variant="default"
-                      className="gap-1 bg-green-600 w-full justify-center"
-                    >
-                      <LinkIcon size={12} />
-                      Linked to App
-                    </Badge>
-                    <div className="text-xs text-muted-foreground">
-                      <p>
-                        Linked by:{" "}
-                        {member.consumerMemberships[0].consumer.firstName}{" "}
-                        {member.consumerMemberships[0].consumer.lastName}
-                      </p>
-                      <p>
-                        Date:{" "}
-                        {new Date(
-                          member.consumerMemberships[0].claimedAt
-                        ).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="gap-1 w-full justify-center"
-                  >
-                    <UserIcon size={12} />
-                    Not Linked
-                  </Badge>
-                )}
               </div>
             </CardContent>
           </Card>

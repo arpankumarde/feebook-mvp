@@ -32,6 +32,9 @@ export async function GET(
                 code: true,
                 category: true,
                 type: true,
+                city: true,
+                region: true,
+                country: true,
               },
             },
             feePlans: {

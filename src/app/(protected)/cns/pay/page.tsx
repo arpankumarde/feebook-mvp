@@ -31,6 +31,13 @@ import {
 import ConsumerTopbar from "@/components/layout/consumer/ConsumerTopbar";
 import { formatAmount } from "@/utils/formatAmount";
 import { APIResponse } from "@/types/common";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface PaymentPageData {
   feePlan: {
@@ -278,46 +285,64 @@ const PayNowPageContent = () => {
   // Error state
   if (error || !paymentData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-background p-6">
-        <div className="max-w-2xl mx-auto pt-20">
-          <Card className="border-destructive/20 bg-destructive/5">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-destructive/10 rounded-lg">
-                  <WarningIcon
-                    size={20}
-                    className="text-destructive"
-                    weight="fill"
-                  />
+      <>
+        <ConsumerTopbar>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+            <h1 className="text-xl sm:text-2xl font-semibold">Payment Error</h1>
+            <span className="text-2xl text-muted-foreground hidden sm:inline">
+              |
+            </span>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Unable to load payment details
+            </p>
+          </div>
+        </ConsumerTopbar>
+
+        <div className="p-4 sm:p-6">
+          <div className="max-w-2xl mx-auto">
+            <Card className="border-destructive/20">
+              <CardContent className="p-6 sm:p-8">
+                <div className="text-center space-y-6">
+                  <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center">
+                    <WarningIcon
+                      size={32}
+                      className="text-destructive"
+                      weight="fill"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold text-destructive">
+                      Payment Error
+                    </h3>
+                    <p className="text-muted-foreground text-sm sm:text-base">
+                      {error || "Payment details not found"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button
+                      variant="outline"
+                      onClick={() => router.back()}
+                      className="gap-2 min-w-[120px]"
+                    >
+                      <ArrowLeftIcon size={16} />
+                      Go Back
+                    </Button>
+                    <Button
+                      onClick={() => window.location.reload()}
+                      className="gap-2 min-w-[120px]"
+                    >
+                      <SpinnerGapIcon size={16} />
+                      Retry
+                    </Button>
+                  </div>
                 </div>
-                <h3 className="font-semibold text-destructive">
-                  Payment Error
-                </h3>
-              </div>
-              <p className="text-muted-foreground mb-6">
-                {error || "Payment details not found"}
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => router.back()}
-                  className="gap-2"
-                >
-                  <ArrowLeftIcon size={16} />
-                  Go Back
-                </Button>
-                <Button
-                  onClick={() => window.location.reload()}
-                  className="gap-2"
-                >
-                  <SpinnerGapIcon size={16} />
-                  Retry
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -347,12 +372,12 @@ const PayNowPageContent = () => {
         </div>
       </ConsumerTopbar>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 p-2">
-        <div className="cols-span-1 lg:col-span-8 p-4 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 md:p-2">
+        <div className="cols-span-1 lg:col-span-8 md:p-4 md:space-y-6">
           {/* Payment Summary Card */}
-          <Card className="border-2 shadow-sm">
-            <CardHeader>
-              <div className="flex items-center justify-between">
+          <Card className="max-sm:border-none md:border-2 max-sm:shadow-none md:shadow-sm">
+            <CardHeader className="max-sm:grid-cols-1 grid-cols-2">
+              <div className="flex sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-primary/10 rounded-xl">
                     <ReceiptIcon
@@ -365,15 +390,17 @@ const PayNowPageContent = () => {
                     <CardTitle className="text-lg">
                       {paymentData.feePlan.name}
                     </CardTitle>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                      <CalendarIcon size={14} />
+                      <span>Due: {dueDate.toLocaleDateString()}</span>
+                    </div>
                     {getStatusBadge(paymentData.feePlan.status)}
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl sm:text-3xl font-bold text-primary font-mono">
-                    {formatAmount(paymentData.feePlan.amount)}
-                  </p>
-                </div>
               </div>
+              <p className="mt-4 max-sm:text-center text-right text-4xl font-bold text-primary font-mono">
+                {formatAmount(paymentData.feePlan.amount)}
+              </p>
             </CardHeader>
             <CardContent className="space-y-4">
               {paymentData.feePlan.description && (
@@ -383,25 +410,55 @@ const PayNowPageContent = () => {
                   </p>
                 </div>
               )}
-
-              <div className="flex items-center gap-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <CalendarIcon size={16} className="text-muted-foreground" />
-                  <span>Due: {dueDate.toLocaleDateString()}</span>
-                </div>
-                {isOverdue && (
-                  <Badge variant="destructive" className="gap-1">
-                    <WarningIcon size={12} weight="fill" />
-                    Overdue
-                  </Badge>
-                )}
-              </div>
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="sm:hidden px-2">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableCell></TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>
+                    <span className="font-medium">Member:</span>
+                  </TableCell>
+                  <TableCell className="text-right">{memberName}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <span className="font-medium">Member ID:</span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {paymentData.member.uniqueId}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <span className="font-medium">Organization:</span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {paymentData.provider.name}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <span className="font-medium">Address:</span>
+                  </TableCell>
+                  <TableCell className="capitalize text-right">
+                    {paymentData.provider.city}, {paymentData.provider.region},{" "}
+                    {paymentData.provider.country}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+          <div className="max-sm:hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Member Details */}
-            <Card className="border-2 shadow-sm">
+            <Card className="max-sm:border-none md:border-2 max-sm:shadow-none md:shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <div className="p-2 bg-blue-50 rounded-lg">
@@ -438,7 +495,7 @@ const PayNowPageContent = () => {
             </Card>
 
             {/* Organization Details */}
-            <Card className="border-2 shadow-sm">
+            <Card className="max-sm:border-none md:border-2 max-sm:shadow-none md:shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <div className="p-2 bg-orange-50 rounded-lg">
@@ -480,9 +537,9 @@ const PayNowPageContent = () => {
           </div>
         </div>
 
-        <div className="cols-span-1 lg:col-span-4 p-4 w-full">
+        <div className="cols-span-1 lg:col-span-4 sm:p-4 w-full">
           {/* Payment Actions */}
-          <Card className="border-2 shadow-lg">
+          <Card className="max-sm:border-none max-sm:shadow-none sm:border-2 sm:shadow-lg">
             <CardContent>
               {paymentData.feePlan.status === "PAID" ? (
                 <div className="text-center space-y-4">
@@ -532,7 +589,7 @@ const PayNowPageContent = () => {
               ) : (
                 <div className="space-y-4">
                   {/* Amount Summary */}
-                  <div className="text-center p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20">
+                  <div className="text-center p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20 max-sm:hidden">
                     <p className="text-sm text-muted-foreground mb-2">
                       Total Amount
                     </p>
@@ -544,34 +601,32 @@ const PayNowPageContent = () => {
                     </div>
                   </div>
 
-                  {/* Payment Button */}
-                  <Button
-                    className="w-full h-12 text-lg gap-3"
-                    size="lg"
-                    onClick={handlePayment}
-                    disabled={processingPayment}
-                  >
-                    {processingPayment ? (
-                      <>
-                        <SpinnerGapIcon size={20} className="animate-spin" />
-                        Processing Payment...
-                      </>
-                    ) : (
-                      <>
-                        <CreditCardIcon size={20} />
-                        Pay Now
-                      </>
-                    )}
-                  </Button>
+                  <div className="sticky bottom-0 space-y-2">
+                    <Button
+                      className="w-full h-12 text-lg gap-3"
+                      size="lg"
+                      onClick={handlePayment}
+                      disabled={processingPayment}
+                    >
+                      {processingPayment ? (
+                        <>
+                          <SpinnerGapIcon size={20} className="animate-spin" />
+                          Processing
+                        </>
+                      ) : (
+                        <>
+                          <CreditCardIcon size={20} weight="fill" />
+                          Pay Now
+                        </>
+                      )}
+                    </Button>
 
-                  {/* Security Notice */}
-                  <div className="text-center p-4 bg-muted/30 rounded-lg">
-                    <p className="text-xs text-muted-foreground">
-                      🔒 Your payment is secured with 256-bit SSL encryption
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      By proceeding, you agree to our terms and conditions
-                    </p>
+                    {/* Security Notice */}
+                    <div className="text-center md:p-4 bg-muted/30 rounded-lg">
+                      <p className="text-xs text-muted-foreground">
+                        🔒 Your payment is secured with 256-bit SSL encryption
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}

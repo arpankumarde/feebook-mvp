@@ -46,19 +46,6 @@ export async function GET(request: NextRequest) {
             dueDate: true,
           },
         },
-        consumerMemberships: {
-          select: {
-            id: true,
-            consumer: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                phone: true,
-              },
-            },
-          },
-        },
       },
       orderBy: {
         createdAt: "desc",
@@ -94,8 +81,6 @@ export async function GET(request: NextRequest) {
         totalPendingAmount,
         hasOverdueFees: overdueFeePlans.length > 0,
         overdueFeePlansCount: overdueFeePlans.length,
-        isLinkedToConsumer: member.consumerMemberships.length > 0,
-        linkedConsumer: member.consumerMemberships[0]?.consumer || null,
       };
     });
 

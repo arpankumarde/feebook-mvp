@@ -233,7 +233,7 @@ const ConsumerDashboard = () => {
 
             {/* Quick Actions Card */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Button variant="outline" className="h-20 flex-col gap-2" asChild>
+              <Button className="h-20 flex-col gap-2" asChild>
                 <Link href={`/${SLUGS.CONSUMER}/memberships/add`}>
                   <PlusIcon size={24} weight="bold" />
                   <span className="text-sm">Add Membership</span>

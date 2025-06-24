@@ -57,7 +57,7 @@ export function RecentTransactionsCard({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2">
           <ReceiptIcon size={20} className="text-primary" />
           Recent Payments
@@ -75,20 +75,25 @@ export function RecentTransactionsCard({
             key={transaction.id}
             className="flex items-center justify-between p-3 bg-green-50/50 rounded-lg border border-green-200/50"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
+            <div className="flex max-sm:flex-col items-start sm:items-center gap-2">
+              <div className="flex items-center gap-4 p-2 bg-green-100 rounded-lg">
                 <CheckCircleIcon
                   size={16}
                   className="text-green-600"
                   weight="fill"
                 />
+                <div className="sm:hidden text-right">
+                  <span className="font-semibold text-green-600">
+                    {formatAmount(transaction.amount)}
+                  </span>
+                </div>
               </div>
               <div className="min-w-0 flex-1">
                 <h4 className="font-medium text-sm truncate">
                   {transaction.feePlanName}
                 </h4>
                 <p className="text-xs text-muted-foreground truncate">
-                  {transaction.memberName} • {transaction.providerName}
+                  {transaction.memberName} <br /> {transaction.providerName}
                 </p>
                 <div className="flex items-center gap-1 mt-1">
                   <CalendarIcon size={12} className="text-muted-foreground" />
@@ -100,7 +105,7 @@ export function RecentTransactionsCard({
                 </div>
               </div>
             </div>
-            <div className="text-right">
+            <div className="max-sm:hidden text-right">
               <span className="font-semibold text-green-600">
                 {formatAmount(transaction.amount)}
               </span>

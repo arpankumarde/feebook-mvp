@@ -25,6 +25,7 @@ import { SignOutIcon } from "@phosphor-icons/react/dist/ssr";
 import { deleteCookie } from "cookies-next/client";
 import { COOKIES } from "@/constants/cookies";
 import { useConsumerAuth } from "@/hooks/use-consumer-auth";
+import { BRAND_SUPPORT_URL } from "@/data/common/brand";
 
 export function ConsumerSidebar() {
   const router = useRouter();
@@ -87,7 +88,12 @@ export function ConsumerSidebar() {
                       isActive={isActive(item.key)}
                     >
                       <Link
-                        href={`/${SLUGS.CONSUMER}/${item.key}`}
+                        href={
+                          item.key === "support"
+                            ? BRAND_SUPPORT_URL || "#"
+                            : `/${SLUGS.CONSUMER}/${item.key}`
+                        }
+                        target={item.key === "support" ? "_blank" : "_self"}
                         className="text-lg font-semibold text-gray-700"
                         onClick={() => setOpenMobile(false)}
                         draggable="false"

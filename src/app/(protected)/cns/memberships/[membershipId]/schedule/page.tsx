@@ -38,6 +38,8 @@ import {
 } from "@prisma/client";
 import { APIResponse } from "@/types/common";
 import Link from "next/link";
+import { FeeBubble } from "@/components/consumer/FeeBubble";
+import { formatAmount } from "@/utils/formatAmount";
 
 interface PaySchedule extends ConsumerMember {
   consumer: Consumer;
@@ -241,7 +243,7 @@ const PaymentSchedulePage = () => {
         </div>
       </ConsumerTopbar>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 p-4 sm:p-6 gap-4 lg:gap-6">
+      <div className="max-sm:hidden grid grid-cols-1 lg:grid-cols-12 p-4 sm:p-6 gap-2 lg:gap-6">
         <div className="space-y-4 col-span-1 lg:col-span-6">
           {/* Back Button */}
           <div className="sm:hidden">
@@ -284,16 +286,14 @@ const PaymentSchedulePage = () => {
                   </h4>
                   <div className="space-y-2">
                     <p className="text-sm">
-                      <span className="font-medium">Name:</span>{" "}
-                      {membership.member.provider.name}
+                      <span className="font-medium">Address:</span>{" "}
+                      {membership.member.provider.city},{" "}
+                      {membership.member.provider.region},{" "}
+                      {membership.member.provider.country}
                     </p>
                     <p className="text-sm">
                       <span className="font-medium">Category:</span>{" "}
                       {membership.member.provider.category}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-medium">Type:</span>{" "}
-                      {membership.member.provider.type}
                     </p>
                   </div>
                 </div>
@@ -312,10 +312,6 @@ const PaymentSchedulePage = () => {
                       <span className="font-medium">Subcategory:</span>{" "}
                       {membership.member.subcategory || "N/A"}
                     </p>
-                    <p className="text-sm">
-                      <span className="font-medium">Claimed:</span>{" "}
-                      {new Date(membership.claimedAt).toLocaleDateString()}
-                    </p>
                   </div>
                 </div>
               </div>
@@ -323,7 +319,7 @@ const PaymentSchedulePage = () => {
           </Card>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="max-md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
@@ -470,7 +466,7 @@ const PaymentSchedulePage = () => {
                                   )}
                                 </div>
                                 <div className="flex items-center font-medium">
-                                  ₹{Number(plan.amount).toLocaleString()}
+                                  {formatAmount(Number(plan.amount))}
                                 </div>
                               </div>
                             </div>
@@ -531,8 +527,147 @@ const PaymentSchedulePage = () => {
           </Card>
         </div>
       </div>
+
+      <div className="sm:hidden">
+        <div className="col-span-1 lg:col-span-6">
+          <Card className="border-0 shadow-none rounded-none py-0 gap-0">
+            <CardHeader className="flex items-center py-2">
+              <CardTitle className="text-xl">{memberName} |</CardTitle>
+              <CardDescription className="font-mono text-black text-xs bg-muted px-2 py-1 rounded-lg">
+                {membership.member.uniqueId}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-4">
+              {sortedFeePlans.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <CalendarIcon size={48} className="mx-auto mb-4 opacity-50" />
+                  <p>No fee plans found for this membership.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {sortedFeePlans.map((plan, index) => {
+                    return (
+                      <FeeBubble
+                        key={index}
+                        feePlan={plan}
+                        onPayment={handlePayment}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </>
   );
 };
 
 export default PaymentSchedulePage;
+
+// {/* <Card
+//                           key={plan.id}
+//                           className={`transition-all duration-200 flex flex-col py-4 md:flex-row md:items-center justify-between gap-2 ${
+//                             isOverdue
+//                               ? "border-red-300 bg-red-50/50"
+//                               : plan.status === "PAID" || plan.isOfflinePaid
+//                               ? "border-green-300 bg-green-50/50"
+//                               : "border-border hover:border-primary/50"
+//                           }`}
+//                         >
+//                           <CardContent className="px-4">
+//                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+//                               <div className="flex-1 space-y-2">
+//                                 <div className="flex items-start justify-between">
+//                                   <h3 className="font-semibold text-lg">
+//                                     {plan.name}
+//                                   </h3>
+//                                 </div>
+
+//                                 {plan.description && (
+//                                   <p className="text-sm text-muted-foreground">
+//                                     {plan.description}
+//                                   </p>
+//                                 )}
+
+//                                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+//                                   <div className="flex items-center gap-1">
+//                                     {plan.status === "PAID" ? (
+//                                       <span>
+//                                         {getStatusBadge(
+//                                           plan.status,
+//                                           plan.isOfflinePaid
+//                                         )}
+//                                       </span>
+//                                     ) : (
+//                                       <>
+//                                         <span>
+//                                           {getStatusBadge(
+//                                             plan.status,
+//                                             plan.isOfflinePaid,
+//                                             plan.dueDate.toString()
+//                                           )}{" "}
+//                                           {dueDate.toLocaleDateString()}
+//                                         </span>
+//                                       </>
+//                                     )}
+//                                   </div>
+//                                   <div className="flex items-center font-medium">
+//                                     ₹{Number(plan.amount).toLocaleString()}
+//                                   </div>
+//                                 </div>
+//                               </div>
+//                             </div>
+//                           </CardContent>
+//                           <CardContent className="px-4">
+//                             <div className="flex flex-col gap-2">
+//                               {canPay && (
+//                                 <Button
+//                                   onClick={() => handlePayment(plan.id)}
+//                                   disabled={payingFeePlanId === plan.id}
+//                                   className="gap-2"
+//                                 >
+//                                   {payingFeePlanId === plan.id ? (
+//                                     <SpinnerGapIcon
+//                                       size={16}
+//                                       className="animate-spin"
+//                                     />
+//                                   ) : (
+//                                     <CreditCardIcon size={16} weight="fill" />
+//                                   )}
+//                                   {payingFeePlanId === plan.id
+//                                     ? "Processing..."
+//                                     : "Pay Now"}
+//                                 </Button>
+//                               )}
+
+//                               {plan.status === "PAID" &&
+//                                 !plan.isOfflinePaid && (
+//                                   <div className="flex md:flex-col justify-between gap-2">
+//                                     {plan.receipt && (
+//                                       <Button
+//                                         className="bg-green-600 hover:bg-green-700"
+//                                         size="sm"
+//                                       >
+//                                         <Link
+//                                           href={plan.receipt}
+//                                           target="_blank"
+//                                         >
+//                                           View Receipt
+//                                         </Link>
+//                                       </Button>
+//                                     )}
+
+//                                     <Button
+//                                       variant={"outline"}
+//                                       size="sm"
+//                                       onClick={() => handlePayment(plan.id)}
+//                                     >
+//                                       View Details
+//                                     </Button>
+//                                   </div>
+//                                 )}
+//                             </div>
+//                           </CardContent>
+//                         </Card> */}

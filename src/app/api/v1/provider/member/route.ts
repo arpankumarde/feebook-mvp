@@ -45,19 +45,6 @@ export async function GET(request: NextRequest) {
 
     const includeClause = {
       feePlans: true,
-      consumerMemberships: {
-        include: {
-          consumer: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              phone: true,
-              email: true,
-            },
-          },
-        },
-      },
     };
 
     if (memberId) {

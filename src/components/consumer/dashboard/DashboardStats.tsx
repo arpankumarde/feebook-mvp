@@ -61,7 +61,12 @@ export function DashboardStats({ statistics }: DashboardStatsProps) {
       {stats.map((stat, index) => {
         const IconComponent = stat.icon;
         return (
-          <Card key={index} className="hover:shadow-md transition-shadow">
+          <Card
+            key={index}
+            className={`hover:shadow-md transition-shadow ${
+              index in [0, 3] ? "max-sm:hidden" : null
+            }`}
+          >
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
                 <div className={`p-3 ${stat.bgColor} rounded-lg`}>

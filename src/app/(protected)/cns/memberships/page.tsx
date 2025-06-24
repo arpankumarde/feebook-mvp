@@ -109,7 +109,7 @@ const MembershipsPage = () => {
     if (hasOverdueFees) {
       return (
         <Badge variant="destructive" className="gap-1">
-          <WarningCircleIcon className="h-3 w-3" />
+          <WarningCircleIcon className="size-3" weight="fill" />
           Overdue
         </Badge>
       );
@@ -272,7 +272,7 @@ const MembershipsPage = () => {
                   </CardContent>
 
                   <CardFooter className="border-t-2 pt-4">
-                    <div className="flex gap-2 w-full">
+                    <div className="flex flex-wrap gap-2 w-full">
                       {/* Always show View Details button */}
                       <Button
                         size="sm"

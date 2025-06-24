@@ -37,7 +37,6 @@ import {
   UserIcon,
   SpinnerGapIcon,
   XCircleIcon,
-  LinkIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { APIResponse } from "@/types/common";
 
@@ -54,13 +53,6 @@ interface SimplifiedMemberData {
   totalPendingAmount: number;
   hasOverdueFees: boolean;
   overdueFeePlansCount: number;
-  isLinkedToConsumer: boolean;
-  linkedConsumer?: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    phone?: string;
-  } | null;
 }
 
 interface MembersData {
@@ -273,45 +265,6 @@ const MembersPage = () => {
                 </div>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-red-50 rounded-lg">
-                    <WarningIcon size={24} className="text-red-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground font-medium">
-                      Overdue Members
-                    </p>
-                    <p className="text-2xl font-bold text-red-600">
-                      {membersData.totalMembersWithOverdueFees}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-green-50 rounded-lg">
-                    <LinkIcon size={24} className="text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground font-medium">
-                      Linked to App
-                    </p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {
-                        membersData.members.filter((m) => m.isLinkedToConsumer)
-                          .length
-                      }
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         )}
 
@@ -379,7 +332,6 @@ const MembersPage = () => {
                     <TableHead>Contact</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Fee Status</TableHead>
-                    <TableHead>App Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -441,30 +393,6 @@ const MembersPage = () => {
                             </p>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {member.isLinkedToConsumer ? (
-                          <div className="space-y-1">
-                            <Badge
-                              variant="default"
-                              className="gap-1 bg-green-600"
-                            >
-                              <LinkIcon size={12} />
-                              Linked
-                            </Badge>
-                            {member.linkedConsumer && (
-                              <p className="text-xs text-muted-foreground">
-                                {member.linkedConsumer.firstName}{" "}
-                                {member.linkedConsumer.lastName}
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <Badge variant="outline" className="gap-1">
-                            <UserIcon size={12} />
-                            Not Linked
-                          </Badge>
-                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">
