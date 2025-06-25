@@ -76,13 +76,14 @@ model ProviderVerification {
 
 // Moderator model
 model Moderator {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  name       String
+  isActive   Boolean  @default(true)
+  isSuperMod Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // Bank account details for providers
