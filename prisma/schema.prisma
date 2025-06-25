@@ -26,6 +26,8 @@ model Provider {
   isEmailVerified    Boolean               @default(false)
   isPhoneVerified    Boolean               @default(false)
   walletBalance      Decimal               @default(0) @db.Decimal(10, 2)
+  logoUrl            String?               @db.VarChar(600)
+  coverImageUrl      String?               @db.VarChar(600)
   createdAt          DateTime              @default(now())
   updatedAt          DateTime              @updatedAt
   verification       ProviderVerification?
@@ -290,6 +292,20 @@ model Policy {
   content   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Query {
+  id        String   @id @default(uuid())
+  email     String?
+  phone     String?
+  subject   String?
+  message   String
+  status    String   @default("OPEN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([phone])
 }
 
 enum AccountType {
