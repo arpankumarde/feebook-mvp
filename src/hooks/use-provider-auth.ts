@@ -19,7 +19,7 @@ export function useProviderAuth() {
       setLoading(false);
 
       // Don't redirect if on KYC routes
-      if (path.startsWith("/pvd/kyc")) {
+      if (path.startsWith(`/${SLUGS.PROVIDER}/kyc`)) {
         return;
       }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { ApiErrorHandler } from "@/lib/error-handler";
-import { BusinessKycFormData } from "@/app/(protected)/pvd/kyc/organization/page";
+import { BusinessKycFormData } from "@/app/(protected)/org/kyc/organization/page";
 import { uploadFile } from "@/lib/uploader";
 
 export async function POST(request: NextRequest) {

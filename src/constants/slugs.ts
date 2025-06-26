@@ -1,12 +1,12 @@
 export const SLUGS = {
-  MODERATOR: "mod",
-  PROVIDER: "pvd",
-  CONSUMER: "cns",
+  MODERATOR: "admin",
+  PROVIDER: "org",
+  CONSUMER: "user",
 };
 export const SLUGS_MAP = {
-  mod: "moderator",
-  pvd: "provider",
-  cns: "consumer",
+  admin: "moderator",
+  org: "provider",
+  user: "consumer",
 } as const;
 
 export type SlugType = keyof typeof SLUGS;
