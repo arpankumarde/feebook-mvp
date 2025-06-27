@@ -4,7 +4,7 @@ import { load } from "@cashfreepayments/cashfree-js";
 
 const cashfree = await load({
   mode:
-    process.env.CASHFREE_ENVIRONMENT === "production"
+    process.env.NEXT_PUBLIC_CASHFREE_ENVIRONMENT === "production"
       ? "production"
       : "sandbox",
 });
