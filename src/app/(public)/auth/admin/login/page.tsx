@@ -9,7 +9,7 @@ import {
   EyeSlashIcon,
   ShieldCheckIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { Moderator } from "@prisma/client";
@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { setModeratorCookie } from "@/lib/auth-utils";
 import { LoginResponse } from "@/types/auth";
 import { SLUGS } from "@/constants/slugs";
+import { useAuth } from "@/hooks/use-auth";
 
 const Page = () => {
   const router = useRouter();
@@ -25,6 +26,13 @@ const Page = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { isLoggedIn, isModerator } = useAuth();
+
+  useEffect(() => {
+    if (isLoggedIn && isModerator) {
+      router.push(`/${SLUGS.MODERATOR}/dashboard`);
+    }
+  }, [isLoggedIn, isModerator, router]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -11,7 +11,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { ShieldCheckIcon } from "@phosphor-icons/react/dist/ssr";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { Consumer } from "@prisma/client";
@@ -20,6 +20,7 @@ import { setConsumerCookie } from "@/lib/auth-utils";
 import { LoginResponse } from "@/types/auth";
 import { SLUGS } from "@/constants/slugs";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
 
 const Page = () => {
   const router = useRouter();
@@ -29,6 +30,13 @@ const Page = () => {
   const [error, setError] = useState("");
   const [step, setStep] = useState<"credentials" | "otp">("credentials");
   const [otpSent, setOtpSent] = useState(false);
+  const { isLoggedIn, isConsumer } = useAuth();
+
+  useEffect(() => {
+    if (isLoggedIn && isConsumer) {
+      router.push(`/${SLUGS.CONSUMER}/dashboard`);
+    }
+  }, [isLoggedIn, isConsumer, router]);
 
   const validatePhoneNumber = (phoneNumber: string) => {
     const phoneRegex = /^\d{10}$/;

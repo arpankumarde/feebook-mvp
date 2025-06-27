@@ -15,7 +15,7 @@ import {
   EyeSlashIcon,
   ShieldCheckIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { Provider } from "@prisma/client";
@@ -24,6 +24,7 @@ import { setProviderCookie } from "@/lib/auth-utils";
 import { LoginResponse } from "@/types/auth";
 import { SLUGS } from "@/constants/slugs";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
 
 const Page = () => {
   const router = useRouter();
@@ -35,6 +36,13 @@ const Page = () => {
   const [error, setError] = useState("");
   const [step, setStep] = useState<"credentials" | "otp">("credentials");
   const [otpSent, setOtpSent] = useState(false);
+  const { isLoggedIn, isProvider } = useAuth();
+
+  useEffect(() => {
+    if (isLoggedIn && isProvider) {
+      router.push(`/${SLUGS.PROVIDER}/dashboard`);
+    }
+  }, [isLoggedIn, isProvider, router]);
 
   const handleSendOtp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

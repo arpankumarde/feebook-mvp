@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import genShortCode from "@/utils/genShortCode";
@@ -32,6 +32,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { useAuth } from "@/hooks/use-auth";
 
 interface RegisterProps {
   name: string;
@@ -61,6 +62,13 @@ const Page = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { isLoggedIn, isProvider } = useAuth();
+
+  useEffect(() => {
+    if (isLoggedIn && isProvider) {
+      router.push(`/${SLUGS.PROVIDER}/dashboard`);
+    }
+  }, [isLoggedIn, isProvider, router]);
 
   const handleSendOtp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
