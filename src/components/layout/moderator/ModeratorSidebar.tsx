@@ -20,12 +20,23 @@ import { SLUGS } from "@/constants/slugs";
 import Image from "next/image";
 import { Separator } from "../../ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { SignOutIcon } from "@phosphor-icons/react/dist/ssr";
 import { deleteCookie } from "cookies-next/client";
 import { COOKIES } from "@/constants/cookies";
 import { BRAND_SUPPORT_URL } from "@/data/common/brand";
 import { useModeratorAuth } from "@/hooks/use-moderator-auth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function ModeratorSidebar() {
   const router = useRouter();
@@ -133,9 +144,32 @@ export function ModeratorSidebar() {
               </span>
             </div>
 
-            <Button variant="destructive" size="icon" onClick={logout}>
-              <SignOutIcon weight="bold" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="icon">
+                  <SignOutIcon weight="bold" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action will log you out of your moderator account and
+                    you will need to log in again to access the moderator
+                    dashboard.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    asChild
+                    className={buttonVariants({ variant: "destructive" })}
+                  >
+                    <Button onClick={logout}>Continue</Button>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
