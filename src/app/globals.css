@@ -124,6 +124,13 @@
   body {
     @apply bg-background text-foreground;
   }
+  img,
+  button,
+  input,
+  textarea,
+  select {
+    @apply select-none;
+  }
 }
 
 * {

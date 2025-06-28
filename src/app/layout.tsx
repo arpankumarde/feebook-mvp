@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Feebook",
+  icons: "/brand/icon.svg",
 };
 
 export default function RootLayout({
