@@ -311,9 +311,9 @@ const PaymentHistoryPage = () => {
 
         {/* Summary Cards */}
         {paymentHistory && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
-              <CardContent className="p-4">
+              <CardContent>
                 <div className="flex items-center space-x-3">
                   <div className="p-3 bg-blue-50 rounded-lg">
                     <ReceiptIcon
@@ -335,7 +335,7 @@ const PaymentHistoryPage = () => {
             </Card>
 
             <Card>
-              <CardContent className="p-4">
+              <CardContent>
                 <div className="flex items-center space-x-3">
                   <div className="p-3 bg-green-50 rounded-lg">
                     <CheckCircleIcon
@@ -357,7 +357,7 @@ const PaymentHistoryPage = () => {
             </Card>
 
             <Card>
-              <CardContent className="p-4">
+              <CardContent>
                 <div className="flex items-center space-x-3">
                   <div className="p-3 bg-purple-50 rounded-lg">
                     <CurrencyInrIcon
@@ -379,7 +379,7 @@ const PaymentHistoryPage = () => {
             </Card>
 
             <Card>
-              <CardContent className="p-4">
+              <CardContent>
                 <div className="flex items-center space-x-3">
                   <div className="p-3 bg-emerald-50 rounded-lg">
                     <BankIcon
@@ -493,7 +493,7 @@ const PaymentHistoryPage = () => {
                 key={transaction.id}
                 className="hover:shadow-md transition-shadow"
               >
-                <CardContent className="p-6">
+                <CardContent>
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                     {/* Transaction Info */}
                     <div className="lg:col-span-6 space-y-3">
@@ -540,11 +540,38 @@ const PaymentHistoryPage = () => {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <CalendarIcon size={14} />
-                          {transaction.paymentTime
-                            ? new Date(transaction.paymentTime).toLocaleString()
-                            : new Date(
+                          {transaction.paymentTime ? (
+                            <span>
+                              {new Date(
+                                transaction.paymentTime
+                              ).toLocaleDateString(undefined, {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                              <span className="mx-1 text-muted-foreground">
+                                |
+                              </span>
+                              <span className="text-muted-foreground">
+                                {new Date(
+                                  transaction.paymentTime
+                                ).toLocaleTimeString(undefined, {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </span>
+                          ) : (
+                            <span>
+                              {new Date(
                                 transaction.createdAt
-                              ).toLocaleDateString()}
+                              ).toLocaleDateString(undefined, {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           <CreditCardIcon size={14} />
@@ -587,7 +614,7 @@ const PaymentHistoryPage = () => {
                           </span>
                           <div className="flex items-center gap-1">
                             <span className="font-mono text-xs">
-                              {transaction.externalPaymentId.slice(-8)}...
+                              {transaction.externalPaymentId}
                             </span>
                             <Button
                               variant="ghost"
@@ -612,7 +639,7 @@ const PaymentHistoryPage = () => {
                           </span>
                           <div className="flex items-center gap-1">
                             <span className="font-mono text-xs">
-                              {transaction.bankReference.slice(-8)}...
+                              {transaction.bankReference}
                             </span>
                             <Button
                               variant="ghost"
