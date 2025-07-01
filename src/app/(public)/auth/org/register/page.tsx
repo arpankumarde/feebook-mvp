@@ -33,6 +33,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { useAuth } from "@/hooks/use-auth";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface RegisterProps {
   name: string;
@@ -178,7 +179,7 @@ const Page = () => {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col-reverse md:flex-row items-center justify-center bg-gray-50">
+    <div className="min-h-dvh flex flex-col-reverse md:flex-row items-stretch justify-center bg-gray-50">
       <div className="p-4 flex-1 min-h-dvh bg-primary/10 hidden sm:block"></div>
 
       <div className="p-4 flex-1 min-h-dvh w-full flex items-center justify-center">
@@ -359,6 +360,40 @@ const Page = () => {
                   </div>
                 </div>
 
+                <div className="flex items-start gap-2">
+                  <Checkbox id="terms" required className="mt-1" />
+                  <Label
+                    htmlFor="terms"
+                    className="block text-sm text-gray-700 leading-relaxed cursor-pointer"
+                  >
+                    I have read and agreed to the{" "}
+                    <Link
+                      href="/legal/privacy-policy"
+                      className="text-primary hover:text-primary/80 underline underline-offset-2"
+                      target="_blank"
+                    >
+                      Privacy Policy
+                    </Link>
+                    ,{" "}
+                    <Link
+                      href="/legal/terms-of-service"
+                      className="text-primary hover:text-primary/80 underline underline-offset-2"
+                      target="_blank"
+                    >
+                      Terms of Service
+                    </Link>
+                    , and{" "}
+                    <Link
+                      href="/legal/refund-and-cancellation-policy"
+                      className="text-primary hover:text-primary/80 underline underline-offset-2"
+                      target="_blank"
+                    >
+                      Refund & Cancellation Policy
+                    </Link>{" "}
+                    of FeeBook. <span className="text-destructive">*</span>
+                  </Label>
+                </div>
+
                 {/* Register Button */}
                 <Button
                   type="submit"
@@ -367,6 +402,11 @@ const Page = () => {
                 >
                   {loading ? "Sending OTP..." : "Continue with Email"}
                 </Button>
+                <p className="text-xs text-gray-500 text-center">
+                  By proceeding, I authorize Feebook to collect payments on
+                  behalf of my organisation, as per the applicable legal and
+                  compliance framework.
+                </p>
               </form>
             ) : (
               <form onSubmit={handleVerifyOtp} className="space-y-5">

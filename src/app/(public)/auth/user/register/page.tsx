@@ -21,6 +21,7 @@ import { LoginResponse } from "@/types/auth";
 import { setConsumerCookie } from "@/lib/auth-utils";
 import { SLUGS } from "@/constants/slugs";
 import { useAuth } from "@/hooks/use-auth";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface RegistrationData {
   firstName: string;
@@ -183,7 +184,7 @@ const Page = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Consumer Registration
+              User Registration
             </h1>
             <p className="text-gray-600">
               {step === "credentials"
@@ -274,6 +275,40 @@ const Page = () => {
                   </p>
                 </div>
 
+                <div className="flex items-start gap-2">
+                  <Checkbox id="terms" required className="mt-1" />
+                  <Label
+                    htmlFor="terms"
+                    className="block text-sm text-gray-700 leading-relaxed cursor-pointer"
+                  >
+                    I have read and agreed to the{" "}
+                    <Link
+                      href="/legal/privacy-policy"
+                      className="text-primary hover:text-primary/80 underline underline-offset-2"
+                      target="_blank"
+                    >
+                      Privacy Policy
+                    </Link>
+                    ,{" "}
+                    <Link
+                      href="/legal/terms-of-service"
+                      className="text-primary hover:text-primary/80 underline underline-offset-2"
+                      target="_blank"
+                    >
+                      Terms of Service
+                    </Link>
+                    , and{" "}
+                    <Link
+                      href="/legal/refund-and-cancellation-policy"
+                      className="text-primary hover:text-primary/80 underline underline-offset-2"
+                      target="_blank"
+                    >
+                      Refund & Cancellation Policy
+                    </Link>{" "}
+                    of FeeBook. <span className="text-destructive">*</span>
+                  </Label>
+                </div>
+
                 {/* Register Button */}
                 <Button
                   type="submit"
@@ -282,6 +317,10 @@ const Page = () => {
                 >
                   {loading ? "Sending OTP..." : "Continue with OTP"}
                 </Button>
+                <p className="text-xs text-gray-500 text-center">
+                  By proceeding, I authorize Feebook to securely process my
+                  payment on behalf of the organisation I am paying.
+                </p>
               </form>
             ) : (
               <form onSubmit={handleVerifyOtp} className="space-y-5">
