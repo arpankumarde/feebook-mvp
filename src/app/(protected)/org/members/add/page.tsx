@@ -26,7 +26,7 @@ import {
 import { useProviderAuth } from "@/hooks/use-provider-auth";
 import ProviderTopbar from "@/components/layout/provider/ProviderTopbar";
 import { toast } from "sonner";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon, LightningIcon } from "@phosphor-icons/react/dist/ssr";
 
 interface MemberFormData {
   firstName: string;
@@ -305,7 +305,7 @@ const Page = () => {
                         handleSelectChange("gender", value)
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
                       <SelectContent>
@@ -316,8 +316,25 @@ const Page = () => {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="uniqueId">Unique ID *</Label>
+                  <div className="space-y-2 -mt-1.5">
+                    <span className="inline-flex justify-between items-center w-full">
+                      <Label htmlFor="uniqueId">Unique ID *</Label>
+                      <Button
+                        variant={"ghost"}
+                        size={"icon"}
+                        type="button"
+                        className="h-auto w-auto aspect-square"
+                        onClick={() => {
+                          const uniqueId = `ID-${Date.now()}`;
+                          setFormData((prev) => ({
+                            ...prev,
+                            uniqueId,
+                          }));
+                        }}
+                      >
+                        <LightningIcon />
+                      </Button>
+                    </span>
                     <Input
                       id="uniqueId"
                       name="uniqueId"
