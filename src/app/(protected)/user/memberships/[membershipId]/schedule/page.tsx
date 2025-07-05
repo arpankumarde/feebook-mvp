@@ -127,7 +127,7 @@ const PaymentSchedulePage = () => {
       case "DUE":
         // check if the due has already passed, the show overdue badge
         const today = new Date();
-        console.log("Due Date:", dueDate);
+        // console.log("Due Date:", dueDate);
         if (dueDate && new Date(dueDate) < today) {
           return (
             <Badge variant="destructive" className="gap-1">
@@ -460,7 +460,11 @@ const PaymentSchedulePage = () => {
                                           plan.isOfflinePaid,
                                           plan.dueDate.toString()
                                         )}{" "}
-                                        {dueDate.toLocaleDateString()}
+                                        {dueDate.toLocaleDateString("en-US", {
+                                          year: "numeric",
+                                          month: "short",
+                                          day: "2-digit",
+                                        })}
                                       </span>
                                     </>
                                   )}

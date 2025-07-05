@@ -392,7 +392,14 @@ const PayNowPageContent = () => {
                     </CardTitle>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                       <CalendarIcon size={14} />
-                      <span>Due: {dueDate.toLocaleDateString()}</span>
+                      <span>
+                        Due:{" "}
+                        {dueDate.toLocaleDateString("en-US", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
                     </div>
                     {getStatusBadge(paymentData.feePlan.status)}
                   </div>

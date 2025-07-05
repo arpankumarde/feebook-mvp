@@ -13,6 +13,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { FeePlan } from "@prisma/client";
 import Link from "next/link";
+import { formatAmount } from "@/utils/formatAmount";
 
 interface FeeBubbleProps {
   feePlan: FeePlan;
@@ -137,7 +138,7 @@ export const FeeBubble: React.FC<FeeBubbleProps> = ({
       {/* Amount */}
       <div className="flex items-center justify-between">
         <div className={`text-2xl font-bold ${getTextColor()}`}>
-          Amount: ₹{Number(feePlan.amount).toLocaleString()}
+          Amount: {formatAmount(Number(feePlan.amount))}
         </div>
       </div>
 
@@ -145,7 +146,7 @@ export const FeeBubble: React.FC<FeeBubbleProps> = ({
       {isPaid ? (
         <div className={`text-sm ${getTextColor()} opacity-90 mb-4`}>
           Paid on{" "}
-          {dueDate.toLocaleDateString("en-GB", {
+          {dueDate.toLocaleDateString("en-US", {
             day: "numeric",
             month: "short",
             year: "numeric",
@@ -153,7 +154,12 @@ export const FeeBubble: React.FC<FeeBubbleProps> = ({
         </div>
       ) : (
         <div className={`text-sm ${getTextColor()} opacity-90 mb-2`}>
-          Due: {dueDate.toLocaleDateString()}
+          Due:{" "}
+          {dueDate.toLocaleDateString("en-US", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })}
         </div>
       )}
 
