@@ -49,3 +49,60 @@ export async function POST(request: Request) {
     ApiErrorHandler.handlePrismaError(error);
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const body = await request.json();
+    const { policyId } = body;
+
+    if (!policyId) {
+      return NextResponse.json(
+        { success: false, message: "Policy ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const deletedPolicy = await db.policy.delete({
+      where: { id: policyId },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: deletedPolicy,
+    });
+  } catch (error) {
+    ApiErrorHandler.handleApiError(error);
+    ApiErrorHandler.handlePrismaError(error);
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { policyId, name, slug, content } = body;
+
+    if (!policyId || !name || !slug || !content) {
+      return NextResponse.json(
+        { success: false, message: "All fields are required." },
+        { status: 400 }
+      );
+    }
+
+    const updatedPolicy = await db.policy.update({
+      where: { id: policyId },
+      data: {
+        name,
+        slug,
+        content,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: updatedPolicy,
+    });
+  } catch (error) {
+    ApiErrorHandler.handleApiError(error);
+    ApiErrorHandler.handlePrismaError(error);
+  }
+}
