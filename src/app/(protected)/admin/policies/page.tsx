@@ -54,7 +54,6 @@ const Page = () => {
         <div className="flex justify-between items-start">
           <div className="space-y-2 flex-1">
             <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
           </div>
           <div className="flex gap-2">
             <Skeleton className="h-8 w-8" />
@@ -88,9 +87,11 @@ const Page = () => {
               Manage company policies
             </p>
           </div>
-          <Button className="w-fit gap-2">
-            <PlusIcon />
-            Add Policy
+          <Button className="w-fit gap-2" asChild>
+            <Link href={`/${SLUGS.MODERATOR}/policies/add`}>
+              <PlusIcon weight="bold" />
+              Add Policy
+            </Link>
           </Button>
         </div>
       </ModeratorTopbar>
