@@ -36,6 +36,15 @@ const Page = () => {
     }
   };
 
+  const deletePolicy = async (id: string) => {
+    try {
+      await api.delete<APIResponse<Policy>>(`/api/v1/moderator/policy/${id}`);
+      setPolicies((prev) => prev.filter((policy) => policy.id !== id));
+    } catch (error) {
+      console.error("Failed to delete policy:", error);
+    }
+  };
+
   useEffect(() => {
     fetchPolicies();
   }, []);
@@ -77,7 +86,7 @@ const Page = () => {
   return (
     <>
       <ModeratorTopbar>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
           <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
             <h1 className="text-xl sm:text-2xl font-semibold">Policies</h1>
             <span className="text-2xl text-muted-foreground hidden sm:inline">
@@ -87,9 +96,10 @@ const Page = () => {
               Manage company policies
             </p>
           </div>
-          <Button className="w-fit gap-2" asChild>
+
+          <Button className="gap-2 max-md:hidden" size={"sm"} asChild>
             <Link href={`/${SLUGS.MODERATOR}/policies/add`}>
-              <PlusIcon weight="bold" />
+              <PlusIcon size={16} weight="bold" />
               Add Policy
             </Link>
           </Button>
@@ -144,6 +154,7 @@ const Page = () => {
                         variant="outline"
                         size="icon"
                         className="text-destructive hover:text-destructive"
+                        onClick={() => deletePolicy(policy.id)}
                       >
                         <TrashIcon size={16} />
                       </Button>
