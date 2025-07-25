@@ -172,9 +172,7 @@ const Page = () => {
     } else if (
       requiresCIN() &&
       formData.cinNumber &&
-      !/^[A-Z]{1}[0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/.test(
-        formData.cinNumber
-      )
+      !Validator.cin(formData.cinNumber.toUpperCase())
     ) {
       newErrors.cinNumber = "Invalid CIN format";
     }
