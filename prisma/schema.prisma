@@ -162,23 +162,24 @@ model ConsumerMember {
 
 // Fee plan model (Fee structure created by providers)
 model FeePlan {
-  id                 String        @id @default(uuid())
+  id                 String          @id @default(uuid())
   providerId         String
   memberId           String
   name               String
   description        String?
-  amount             Decimal       @db.Decimal(10, 2)
-  status             FeePlanStatus @default(DUE)
-  dueDate            DateTime      @db.Date
-  isOfflinePaid      Boolean       @default(false)
-  consumerClaimsPaid Boolean       @default(false)
+  amount             Decimal         @db.Decimal(10, 2)
+  status             FeePlanStatus   @default(DUE)
+  dueDate            DateTime        @db.Date
+  isOfflinePaid      Boolean         @default(false)
+  consumerClaimsPaid Boolean         @default(false)
   receipt            String?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-  provider           Provider      @relation(fields: [providerId], references: [id])
-  member             Member        @relation(fields: [memberId], references: [id])
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  provider           Provider        @relation(fields: [providerId], references: [id])
+  member             Member          @relation(fields: [memberId], references: [id])
   transactions       Transaction[]
   orders             Order[]
+  Notifications      Notifications[]
 }
 
 // Order model for payments
@@ -286,6 +287,19 @@ model Otp {
   @@index([expiresAt])
 }
 
+model Notifications {
+  id        String   @id @default(uuid())
+  feePlanId String
+  channel   Channel  @default(EMAIL)
+  message   String
+  publish   DateTime
+  metadata  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  feePlan FeePlan @relation(fields: [feePlanId], references: [id])
+}
+
 model Policy {
   id        String   @id @default(uuid())
   name      String
@@ -365,4 +379,9 @@ enum Gender {
   MALE
   FEMALE
   OTHER
+}
+
+enum Channel {
+  PHONE
+  EMAIL
 }
