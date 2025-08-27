@@ -62,6 +62,7 @@ import {
   CrownIcon,
   SealCheckIcon,
   EnvelopeIcon,
+  SealWarningIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import ModeratorTopbar from "@/components/layout/moderator/ModeratorTopbar";
 import api from "@/lib/api";
@@ -375,7 +376,7 @@ const Page = () => {
       <div className="p-4 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
-            <CardContent className="p-4">
+            <CardContent>
               <div className="flex items-center space-x-3">
                 <div className="p-3 bg-primary/10 rounded-lg">
                   <UsersThreeIcon size={24} className="text-primary" />
@@ -391,7 +392,7 @@ const Page = () => {
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent>
               <div className="flex items-center space-x-3">
                 <div className="p-3 bg-green-100 rounded-lg">
                   <CheckCircleIcon size={24} className="text-green-600" />
@@ -409,7 +410,7 @@ const Page = () => {
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent>
               <div className="flex items-center space-x-3">
                 <div className="p-3 bg-orange-100 rounded-lg">
                   <XCircleIcon size={24} className="text-orange-600" />
@@ -427,7 +428,7 @@ const Page = () => {
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent>
               <div className="flex items-center space-x-3">
                 <div className="p-3 bg-blue-100 rounded-lg">
                   <CrownIcon size={24} className="text-blue-600" />
@@ -445,7 +446,7 @@ const Page = () => {
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent>
               <div className="flex items-center space-x-3">
                 <div className="p-3 bg-purple-100 rounded-lg">
                   <CalendarIcon size={24} className="text-purple-600" />
@@ -475,8 +476,8 @@ const Page = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="col-span-2 space-y-2">
                 <Label htmlFor="search">Search</Label>
                 <div className="relative">
                   <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -496,7 +497,7 @@ const Page = () => {
                   value={verificationFilter}
                   onValueChange={setVerificationFilter}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -513,7 +514,7 @@ const Page = () => {
                   value={membershipFilter}
                   onValueChange={setMembershipFilter}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="All Users" />
                   </SelectTrigger>
                   <SelectContent>
@@ -535,7 +536,11 @@ const Page = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <UsersThreeIcon size={20} />
+              <UsersThreeIcon
+                size={20}
+                className="text-primary"
+                weight="duotone"
+              />
               All Users ({filteredConsumers.length})
             </CardTitle>
             <CardDescription>
@@ -568,7 +573,7 @@ const Page = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>User</TableHead>
+                      <TableHead>Full Name</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Memberships</TableHead>
@@ -584,12 +589,14 @@ const Page = () => {
                             <Avatar className="h-8 w-8">
                               <AvatarImage src="" />
                               <AvatarFallback className="text-sm bg-primary/20">
-                                {user?.firstName?.[0] ?? ""}
-                                {user?.lastName?.[0] ?? ""}
+                                {user?.firstName?.[0].toUpperCase() ?? ""}
+                                {user?.lastName?.[0].toUpperCase() ?? ""}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium">{getFullName(user)}</p>
+                              <p className="font-medium capitalize">
+                                {getFullName(user)}
+                              </p>
                               <p className="text-sm text-muted-foreground">
                                 ID: {user.id}
                               </p>
@@ -628,10 +635,10 @@ const Page = () => {
                               className="text-green-800/80"
                             />
                           ) : (
-                            <XCircleIcon
+                            <SealWarningIcon
                               size={20}
                               weight="fill"
-                              className="text-red-700/80"
+                              className="text-red-700/85"
                             />
                           )}
                         </TableCell>
