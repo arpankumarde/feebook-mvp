@@ -38,7 +38,17 @@ import {
   WalletIcon,
   WarningIcon,
   TrashIcon,
+  SquaresFourIcon,
+  RowsIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface ExtendedMember extends Member {
   feePlans: FeePlan[] | null;
@@ -63,6 +73,7 @@ const Page = () => {
 
   const params = useSearchParams();
   const uniqueId = params.get("uniqueId");
+  const [layout, setLayout] = useState<"table" | "card">("card");
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -429,181 +440,343 @@ const Page = () => {
                     />
                     Fee Plans
                   </CardTitle>
-                  <Button size="sm" onClick={addFeePlan} className="gap-2">
-                    <PlusIcon className="size-4" weight="bold" />
-                    Add Plan
-                  </Button>
+                  <div className="flex gap-2">
+                    <div className="px-2">
+                      <Button
+                        size="sm"
+                        className="rounded-e-none border"
+                        variant={layout == "card" ? "secondary" : "default"}
+                        onClick={() => setLayout("table")}
+                      >
+                        <RowsIcon />
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="rounded-s-none"
+                        variant={layout == "table" ? "secondary" : "default"}
+                        onClick={() => setLayout("card")}
+                      >
+                        <SquaresFourIcon />
+                      </Button>
+                    </div>
+                    <Button size="sm" onClick={addFeePlan} className="gap-2">
+                      <PlusIcon className="size-4" weight="bold" />
+                      Add Plan
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {feePlans.map(
-                  (plan, index) =>
-                    !plan.isDeleted && (
-                      <Card
-                        key={index}
-                        className="border-l-4 border-l-primary gap-0"
-                      >
-                        <CardHeader>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <WalletIcon
-                                className="h-4 w-4 text-primary"
-                                weight="duotone"
-                              />
-                              <span className="font-medium text-sm">
-                                Fee Plan {index + 1}
-                              </span>
-                            </div>
-                            {feePlans.length > 1 && !plan.isPaid && (
-                              <Button
-                                variant="destructive"
-                                size={"icon"}
-                                onClick={() => removeFeePlan(index)}
-                                disabled={plan.isPaid}
-                              >
-                                <TrashIcon weight="bold" />
-                              </Button>
-                            )}
-                            {plan.isPaid && (
-                              <Badge className="bg-green-100 text-green-800 border-green-200">
-                                <CheckCircleIcon weight="fill" />
-                                Paid
-                              </Badge>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label
-                                htmlFor={`name-${index}`}
-                                className="text-xs font-medium"
-                              >
-                                Fee Type
-                                <span className="text-destructive">*</span>
-                              </Label>
-                              <Input
-                                id={`name-${index}`}
-                                value={plan.name}
-                                onChange={(e) =>
-                                  handleFeePlanChange(
-                                    index,
-                                    "name",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="e.g., Tuition Fee"
-                                disabled={plan.isPaid}
-                                className="h-9"
-                                required
-                              />
-                            </div>
 
-                            <div className="space-y-2">
-                              <Label
-                                htmlFor={`description-${index}`}
-                                className="text-xs font-medium"
-                              >
-                                Description
-                              </Label>
-                              <Input
-                                id={`description-${index}`}
-                                value={plan.description}
-                                onChange={(e) =>
-                                  handleFeePlanChange(
-                                    index,
-                                    "description",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="e.g., May Month"
-                                disabled={plan.isPaid}
-                                className="h-9"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label
-                                htmlFor={`amount-${index}`}
-                                className="text-xs font-medium"
-                              >
-                                Amount (₹)
-                                <span className="text-destructive">*</span>
-                              </Label>
-                              <Input
-                                id={`amount-${index}`}
-                                type="number"
-                                value={plan.amount}
-                                onChange={(e) =>
-                                  handleFeePlanChange(
-                                    index,
-                                    "amount",
-                                    e.target.value
-                                  )
-                                }
-                                step={0.01}
-                                min={1}
-                                placeholder="0.00"
-                                disabled={plan.isPaid}
-                                className="h-9"
-                                required
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label
-                                htmlFor={`dueDate-${index}`}
-                                className="text-xs font-medium"
-                              >
-                                Due Date
-                                <span className="text-destructive">*</span>
-                              </Label>
-                              <Popover>
-                                <PopoverTrigger asChild>
+              {layout === "table" && (
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10">#</TableHead>
+                        <TableHead>Fee Type</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Due Data</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {feePlans.map(
+                        (plan, index) =>
+                          !plan.isDeleted && (
+                            <TableRow key={index}>
+                              <TableCell>{index + 1}</TableCell>
+                              <TableCell>
+                                <Input
+                                  id={`name-${index}`}
+                                  value={plan.name}
+                                  onChange={(e) =>
+                                    handleFeePlanChange(
+                                      index,
+                                      "name",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="e.g., Tuition Fee"
+                                  disabled={plan.isPaid}
+                                  className="h-9"
+                                  required
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  id={`description-${index}`}
+                                  value={plan.description}
+                                  onChange={(e) =>
+                                    handleFeePlanChange(
+                                      index,
+                                      "description",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="e.g., May Month"
+                                  disabled={plan.isPaid}
+                                  className="h-9"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  id={`amount-${index}`}
+                                  type="number"
+                                  value={plan.amount}
+                                  onChange={(e) =>
+                                    handleFeePlanChange(
+                                      index,
+                                      "amount",
+                                      e.target.value
+                                    )
+                                  }
+                                  step={0.01}
+                                  min={1}
+                                  placeholder="0.00"
+                                  disabled={plan.isPaid}
+                                  className="h-9"
+                                  required
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className={cn(
+                                        "w-full h-9 justify-start text-left font-normal",
+                                        !plan.dueDate && "text-muted-foreground"
+                                      )}
+                                      disabled={plan.isPaid}
+                                    >
+                                      <CalendarBlankIcon
+                                        className="mr-2 h-4 w-4"
+                                        weight="duotone"
+                                      />
+                                      {plan.dueDate ? (
+                                        format(plan.dueDate, "PPP")
+                                      ) : (
+                                        <span>Select date</span>
+                                      )}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                  >
+                                    <Calendar
+                                      mode="single"
+                                      selected={plan.dueDate}
+                                      onSelect={(date) =>
+                                        handleFeePlanChange(
+                                          index,
+                                          "dueDate",
+                                          date
+                                        )
+                                      }
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </TableCell>
+                              <TableCell>
+                                {feePlans.length > 1 && !plan.isPaid && (
                                   <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "w-full h-9 justify-start text-left font-normal",
-                                      !plan.dueDate && "text-muted-foreground"
-                                    )}
+                                    variant="destructive"
+                                    size={"icon"}
+                                    onClick={() => removeFeePlan(index)}
                                     disabled={plan.isPaid}
                                   >
-                                    <CalendarBlankIcon
-                                      className="mr-2 h-4 w-4"
-                                      weight="duotone"
-                                    />
-                                    {plan.dueDate ? (
-                                      format(plan.dueDate, "PPP")
-                                    ) : (
-                                      <span>Select date</span>
-                                    )}
+                                    <TrashIcon weight="bold" />
                                   </Button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  className="w-auto p-0"
-                                  align="start"
+                                )}
+                                {plan.isPaid && (
+                                  <Badge className="bg-green-100 text-green-800 border-green-200">
+                                    <CheckCircleIcon weight="fill" />
+                                    Paid
+                                  </Badge>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              )}
+
+              {layout === "card" && (
+                <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {feePlans.map(
+                    (plan, index) =>
+                      !plan.isDeleted && (
+                        <Card
+                          key={index}
+                          className="border-l-4 border-l-primary gap-0"
+                        >
+                          <CardHeader>
+                            <div className="flex justify-between">
+                              <div className="flex gap-2">
+                                <WalletIcon
+                                  className="h-4 w-4 text-primary"
+                                  weight="duotone"
+                                />
+                                <span className="font-medium text-sm">
+                                  Fee Plan {index + 1}
+                                </span>
+                              </div>
+                              {feePlans.length > 1 && !plan.isPaid && (
+                                <Button
+                                  variant="destructive"
+                                  size={"icon"}
+                                  onClick={() => removeFeePlan(index)}
+                                  disabled={plan.isPaid}
                                 >
-                                  <Calendar
-                                    mode="single"
-                                    selected={plan.dueDate}
-                                    onSelect={(date) =>
-                                      handleFeePlanChange(
-                                        index,
-                                        "dueDate",
-                                        date
-                                      )
-                                    }
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
+                                  <TrashIcon weight="bold" />
+                                </Button>
+                              )}
+                              {plan.isPaid && (
+                                <Badge className="bg-green-100 text-green-800 border-green-200">
+                                  <CheckCircleIcon weight="fill" />
+                                  Paid
+                                </Badge>
+                              )}
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )
-                )}
-              </CardContent>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label
+                                  htmlFor={`name-${index}`}
+                                  className="text-xs font-medium"
+                                >
+                                  Fee Type
+                                  <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                  id={`name-${index}`}
+                                  value={plan.name}
+                                  onChange={(e) =>
+                                    handleFeePlanChange(
+                                      index,
+                                      "name",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="e.g., Tuition Fee"
+                                  disabled={plan.isPaid}
+                                  className="h-9"
+                                  required
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label
+                                  htmlFor={`description-${index}`}
+                                  className="text-xs font-medium"
+                                >
+                                  Description
+                                </Label>
+                                <Input
+                                  id={`description-${index}`}
+                                  value={plan.description}
+                                  onChange={(e) =>
+                                    handleFeePlanChange(
+                                      index,
+                                      "description",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="e.g., May Month"
+                                  disabled={plan.isPaid}
+                                  className="h-9"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label
+                                  htmlFor={`amount-${index}`}
+                                  className="text-xs font-medium"
+                                >
+                                  Amount (₹)
+                                  <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                  id={`amount-${index}`}
+                                  type="number"
+                                  value={plan.amount}
+                                  onChange={(e) =>
+                                    handleFeePlanChange(
+                                      index,
+                                      "amount",
+                                      e.target.value
+                                    )
+                                  }
+                                  step={0.01}
+                                  min={1}
+                                  placeholder="0.00"
+                                  disabled={plan.isPaid}
+                                  className="h-9"
+                                  required
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label
+                                  htmlFor={`dueDate-${index}`}
+                                  className="text-xs font-medium"
+                                >
+                                  Due Date
+                                  <span className="text-destructive">*</span>
+                                </Label>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className={cn(
+                                        "w-full h-9 justify-start text-left font-normal",
+                                        !plan.dueDate && "text-muted-foreground"
+                                      )}
+                                      disabled={plan.isPaid}
+                                    >
+                                      <CalendarBlankIcon
+                                        className="mr-2 h-4 w-4"
+                                        weight="duotone"
+                                      />
+                                      {plan.dueDate ? (
+                                        format(plan.dueDate, "PPP")
+                                      ) : (
+                                        <span>Select date</span>
+                                      )}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                  >
+                                    <Calendar
+                                      mode="single"
+                                      selected={plan.dueDate}
+                                      onSelect={(date) =>
+                                        handleFeePlanChange(
+                                          index,
+                                          "dueDate",
+                                          date
+                                        )
+                                      }
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                  )}
+                </CardContent>
+              )}
+
               <CardFooter className="flex justify-end">
                 <Button
                   onClick={handleSubmit}
