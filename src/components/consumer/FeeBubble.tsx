@@ -19,12 +19,16 @@ interface FeeBubbleProps {
   feePlan: FeePlan;
   payingFeePlanId?: string | null;
   onPayment?: (feePlanId: string) => void;
+  onManualPayment?: (feePlanId: string, isPaid: boolean) => void;
+  showManualPaymentOption?: boolean;
 }
 
 export const FeeBubble: React.FC<FeeBubbleProps> = ({
   feePlan,
   payingFeePlanId,
   onPayment,
+  onManualPayment,
+  showManualPaymentOption = false,
 }) => {
   const dueDate = new Date(feePlan.dueDate);
   const isOverdue =
@@ -40,7 +44,7 @@ export const FeeBubble: React.FC<FeeBubbleProps> = ({
           className="gap-1 text-xs bg-white/80 text-gray-700 border-0 absolute top-3 right-3"
         >
           <CheckCircleIcon size={10} weight="fill" />
-          PAID
+          PAID (Offline)
         </Badge>
       );
     }
@@ -206,6 +210,32 @@ export const FeeBubble: React.FC<FeeBubbleProps> = ({
           </Button>
         )}
 
+        {showManualPaymentOption && onManualPayment && canPay && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onManualPayment(feePlan.id, true)}
+            className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+          >
+            <CheckCircleIcon size={12} weight="fill" />
+            Mark as Paid (Offline)
+          </Button>
+        )}
+
+        {showManualPaymentOption &&
+          onManualPayment &&
+          feePlan.isOfflinePaid && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onManualPayment(feePlan.id, false)}
+              className="bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
+            >
+              <WarningIcon size={12} weight="fill" />
+              Mark as Unpaid
+            </Button>
+          )}
+
         {isPaid && !feePlan.isOfflinePaid && (
           <div className="flex gap-2">
             {feePlan.receipt && (
@@ -227,6 +257,14 @@ export const FeeBubble: React.FC<FeeBubbleProps> = ({
             >
               Details
             </Button>
+          </div>
+        )}
+
+        {isPaid && feePlan.isOfflinePaid && (
+          <div className="text-center">
+            <p className="text-xs text-gray-600 bg-white/60 rounded px-2 py-1">
+              Marked as paid offline by organization
+            </p>
           </div>
         )}
       </div>

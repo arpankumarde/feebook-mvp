@@ -40,6 +40,8 @@ import {
   TrashIcon,
   SquaresFourIcon,
   RowsIcon,
+  SpinnerGapIcon,
+  ClockIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import {
   Table,
@@ -101,6 +103,7 @@ const Page = () => {
   );
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [markingPayment, setMarkingPayment] = useState<string | null>(null);
 
   const fetchMember = async () => {
     if (!searchId || !provider?.id) return;
@@ -297,6 +300,44 @@ const Page = () => {
     }
   };
 
+  const handleManualPayment = async (feePlanId: string, isPaid: boolean) => {
+    if (!provider?.id) return;
+
+    try {
+      setMarkingPayment(feePlanId);
+
+      const response = await api.post("/api/v1/provider/feeplan/mark-paid", {
+        feePlanId,
+        isOfflinePaid: isPaid,
+        providerId: provider.id,
+      });
+
+      if (response.data.success) {
+        toast.success(
+          isPaid
+            ? "Fee marked as paid successfully!"
+            : "Fee marked as unpaid successfully!"
+        );
+
+        // Refresh member data to show updated status
+        await fetchMember();
+      } else {
+        throw new Error(
+          response.data.error || "Failed to update payment status"
+        );
+      }
+    } catch (err: any) {
+      console.error("Error marking payment:", err);
+      toast.error(
+        err.response?.data?.error ||
+          err.message ||
+          "Failed to update payment status"
+      );
+    } finally {
+      setMarkingPayment(null);
+    }
+  };
+
   useEffect(() => {
     // If uniqueId is provided in the URL, fetch member details automatically
     if (uniqueId && provider?.id) {
@@ -476,7 +517,8 @@ const Page = () => {
                         <TableHead>Fee Type</TableHead>
                         <TableHead>Description</TableHead>
                         <TableHead>Amount</TableHead>
-                        <TableHead>Due Data</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -580,22 +622,90 @@ const Page = () => {
                                 </Popover>
                               </TableCell>
                               <TableCell>
-                                {feePlans.length > 1 && !plan.isPaid && (
-                                  <Button
-                                    variant="destructive"
-                                    size={"icon"}
-                                    onClick={() => removeFeePlan(index)}
-                                    disabled={plan.isPaid}
-                                  >
-                                    <TrashIcon weight="bold" />
-                                  </Button>
-                                )}
-                                {plan.isPaid && (
+                                {plan.isPaid ? (
                                   <Badge className="bg-green-100 text-green-800 border-green-200">
                                     <CheckCircleIcon weight="fill" />
                                     Paid
                                   </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="outline"
+                                    className="border-orange-200 text-orange-600"
+                                  >
+                                    <ClockIcon weight="fill" />
+                                    Pending
+                                  </Badge>
                                 )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  {feePlans.length > 1 && !plan.isPaid && (
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={() => removeFeePlan(index)}
+                                      disabled={plan.isPaid}
+                                    >
+                                      <TrashIcon weight="bold" />
+                                    </Button>
+                                  )}
+
+                                  {/* Manual payment button for existing fees */}
+                                  {plan.id && !plan.isPaid && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleManualPayment(plan.id!, true)
+                                      }
+                                      disabled={markingPayment === plan.id}
+                                      className="gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                    >
+                                      {markingPayment === plan.id ? (
+                                        <SpinnerGapIcon
+                                          size={12}
+                                          className="animate-spin"
+                                        />
+                                      ) : (
+                                        <CheckCircleIcon
+                                          size={12}
+                                          weight="fill"
+                                        />
+                                      )}
+                                      Mark Paid
+                                    </Button>
+                                  )}
+
+                                  {/* Unmark payment button for offline paid fees */}
+                                  {plan.id &&
+                                    plan.isPaid &&
+                                    member?.feePlans?.find(
+                                      (fp) => fp.id === plan.id
+                                    )?.isOfflinePaid && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleManualPayment(plan.id!, false)
+                                        }
+                                        disabled={markingPayment === plan.id}
+                                        className="gap-1 bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
+                                      >
+                                        {markingPayment === plan.id ? (
+                                          <SpinnerGapIcon
+                                            size={12}
+                                            className="animate-spin"
+                                          />
+                                        ) : (
+                                          <WarningIcon
+                                            size={12}
+                                            weight="fill"
+                                          />
+                                        )}
+                                        Unmark
+                                      </Button>
+                                    )}
+                                </div>
                               </TableCell>
                             </TableRow>
                           )
@@ -625,22 +735,24 @@ const Page = () => {
                                   Fee Plan {index + 1}
                                 </span>
                               </div>
-                              {feePlans.length > 1 && !plan.isPaid && (
-                                <Button
-                                  variant="destructive"
-                                  size={"icon"}
-                                  onClick={() => removeFeePlan(index)}
-                                  disabled={plan.isPaid}
-                                >
-                                  <TrashIcon weight="bold" />
-                                </Button>
-                              )}
-                              {plan.isPaid && (
-                                <Badge className="bg-green-100 text-green-800 border-green-200">
-                                  <CheckCircleIcon weight="fill" />
-                                  Paid
-                                </Badge>
-                              )}
+                              <div className="flex gap-2">
+                                {feePlans.length > 1 && !plan.isPaid && (
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => removeFeePlan(index)}
+                                    disabled={plan.isPaid}
+                                  >
+                                    <TrashIcon weight="bold" />
+                                  </Button>
+                                )}
+                                {plan.isPaid && (
+                                  <Badge className="bg-green-100 text-green-800 border-green-200">
+                                    <CheckCircleIcon weight="fill" />
+                                    Paid
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </CardHeader>
                           <CardContent>
@@ -771,6 +883,62 @@ const Page = () => {
                               </div>
                             </div>
                           </CardContent>
+
+                          {plan.id && (
+                            <div className="mt-4 pt-4 px-4 ml-auto border-t">
+                              <div className="flex gap-2">
+                                {!plan.isPaid && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleManualPayment(plan.id!, true)
+                                    }
+                                    disabled={markingPayment === plan.id}
+                                    className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                  >
+                                    {markingPayment === plan.id ? (
+                                      <SpinnerGapIcon
+                                        size={12}
+                                        className="animate-spin"
+                                      />
+                                    ) : (
+                                      <CheckCircleIcon
+                                        size={12}
+                                        weight="fill"
+                                      />
+                                    )}
+                                    Mark as Paid
+                                  </Button>
+                                )}
+
+                                {plan.isPaid &&
+                                  member?.feePlans?.find(
+                                    (fp) => fp.id === plan.id
+                                  )?.isOfflinePaid && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleManualPayment(plan.id!, false)
+                                      }
+                                      disabled={markingPayment === plan.id}
+                                      className="bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
+                                    >
+                                      {markingPayment === plan.id ? (
+                                        <SpinnerGapIcon
+                                          size={12}
+                                          className="animate-spin"
+                                        />
+                                      ) : (
+                                        <WarningIcon size={12} weight="fill" />
+                                      )}
+                                      Mark as Unpaid
+                                    </Button>
+                                  )}
+                              </div>
+                            </div>
+                          )}
                         </Card>
                       )
                   )}
