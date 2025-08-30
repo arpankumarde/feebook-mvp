@@ -37,8 +37,14 @@ import {
   UserIcon,
   SpinnerGapIcon,
   XCircleIcon,
+  ListChecksIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { APIResponse } from "@/types/common";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SimplifiedMemberData {
   id: string;
@@ -231,7 +237,7 @@ const MembersPage = () => {
         {membersData && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
-              <CardContent className="p-4">
+              <CardContent>
                 <div className="flex items-center space-x-3">
                   <div className="p-3 bg-primary/10 rounded-lg">
                     <UsersThreeIcon size={24} className="text-primary" />
@@ -249,7 +255,7 @@ const MembersPage = () => {
             </Card>
 
             <Card>
-              <CardContent className="p-4">
+              <CardContent>
                 <div className="flex items-center space-x-3">
                   <div className="p-3 bg-blue-50 rounded-lg">
                     <ClockIcon size={24} className="text-blue-600" />
@@ -332,7 +338,7 @@ const MembersPage = () => {
                     <TableHead>Contact</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Fee Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -347,12 +353,15 @@ const MembersPage = () => {
                             return (firstChar + lastChar).toUpperCase();
                           })()}
                         </div>
-                        <div className="space-y-1">
+                        <Link
+                          href={`/${SLUGS.PROVIDER}/members/view/${member.id}`}
+                          className="space-y-1"
+                        >
                           <p className="font-medium">{member.memberName}</p>
                           <p className="text-sm text-muted-foreground">
                             ID: {member.uniqueId}
                           </p>
-                        </div>
+                        </Link>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
@@ -394,23 +403,32 @@ const MembersPage = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link
-                              href={`/${SLUGS.PROVIDER}/members/view/${member.id}`}
-                            >
-                              <EyeIcon size={16} />
-                            </Link>
-                          </Button>
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link
-                              href={`/${SLUGS.PROVIDER}/members/edit/${member.id}`}
-                            >
-                              <PencilIcon size={16} />
-                            </Link>
-                          </Button>
-                        </div>
+                      <TableCell className="flex gap-2 justify-center">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="icon" asChild>
+                              <Link
+                                href={`/${SLUGS.PROVIDER}/members/edit/${member.id}`}
+                              >
+                                <PencilIcon weight="duotone" size={16} />
+                              </Link>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit Member</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="icon" asChild>
+                              <Link
+                                href={`/${SLUGS.PROVIDER}/fee-management?uniqueId=${member.uniqueId}`}
+                              >
+                                <ListChecksIcon weight="duotone" size={16} />
+                              </Link>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>View Fee Plans</TooltipContent>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))}
