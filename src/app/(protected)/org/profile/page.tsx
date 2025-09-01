@@ -25,21 +25,37 @@ import { useEffect, useState } from "react";
 import {
   CheckCircleIcon,
   CircleNotchIcon,
+  SpinnerIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { toast } from "sonner";
 import { setProviderCookie } from "@/lib/auth-utils";
 import { APIResponse } from "@/types/common";
 import { REGIONS } from "@/data/common/regions";
+import Image from "next/image";
 
 const Page = () => {
   const { provider } = useProviderAuth();
   const [data, setData] = useState<Provider | null>(provider);
   const [isLoading, setIsLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     setData(provider);
   }, [provider]);
+
+  useEffect(() => {
+    if (logoFile) {
+      const url = URL.createObjectURL(logoFile);
+      setLogoPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setLogoPreview(null);
+    }
+  }, [logoFile]);
 
   const handleInputChange = (
     field: keyof Provider,
@@ -82,6 +98,64 @@ const Page = () => {
     }
   };
 
+  const handleLogoInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLogoError(null);
+    const file = e.target.files?.[0] || null;
+    setLogoFile(file);
+    if (!file) return;
+    const allowedExts = ["jpg", "jpeg", "png"];
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!allowedExts.includes(ext)) {
+      setLogoError("Logo must be a JPG or PNG image");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setLogoError("Logo size must be less than 2MB");
+      return;
+    }
+    uploadLogo(file, ext);
+  };
+
+  const uploadLogo = async (file: File, ext: string) => {
+    setLogoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("fileName", `${data?.id || ""}`);
+      formData.append("fileExt", ext);
+      formData.append("folderPath", "org-logos");
+      const res = await fetch("/api/v1/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const result = await res.json();
+      if (result?.success && result?.url) {
+        setData((prev) => ({
+          ...prev!,
+          logoUrl: result.url,
+        }));
+        // setHasChanges(true);
+        toast.success("Logo updated successfully.");
+        if (data && data.code) {
+          const { data: newdata } = await api.post<APIResponse<Provider>>(
+            `/api/v1/provider/by-code/${data.code}`,
+            {
+              logoUrl: result.url,
+            }
+          );
+
+          if (newdata?.data) setProviderCookie(newdata?.data);
+        }
+      } else {
+        setLogoError(result?.error || "Failed to upload logo");
+      }
+    } catch (err: any) {
+      setLogoError(err?.message || "Failed to upload logo");
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
   if (!data) {
     return (
       <>
@@ -116,7 +190,6 @@ const Page = () => {
           </p>
         </div>
       </ProviderTopbar>
-
       <div className="p-2 sm:p-4 max-w-4xl mx-auto">
         <Card>
           <CardHeader>
@@ -126,6 +199,61 @@ const Page = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full border bg-muted flex items-center justify-center overflow-hidden">
+                  {logoPreview ? (
+                    <Image
+                      src={logoPreview}
+                      alt="Logo Preview"
+                      className="w-full h-full object-cover rounded-full"
+                      width={200}
+                      height={200}
+                    />
+                  ) : data?.logoUrl ? (
+                    <Image
+                      src={data.logoUrl}
+                      alt="Institution Logo"
+                      className="w-full h-full object-cover rounded-full"
+                      width={200}
+                      height={200}
+                    />
+                  ) : (
+                    <span className="text-muted-foreground text-xs">
+                      No Logo
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <label
+                    htmlFor="logo-input"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Institution Logo
+                  </label>
+                  <input
+                    id="logo-input"
+                    type="file"
+                    accept=".jpg,.jpeg,.png"
+                    onChange={handleLogoInputChange}
+                    disabled={logoUploading}
+                    className="block"
+                  />
+                  {logoUploading && (
+                    <span className="text-xs text-muted-foreground">
+                      Uploading <SpinnerIcon className="inline animate-spin" />
+                    </span>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                JPG or PNG only. Max size 2MB.
+              </p>
+              {logoError && (
+                <p className="text-xs text-destructive">{logoError}</p>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="code">Institution Code</Label>
               <Input
