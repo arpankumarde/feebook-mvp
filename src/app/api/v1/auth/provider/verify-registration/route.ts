@@ -105,7 +105,8 @@ export async function POST(request: NextRequest) {
         code,
         type: accountType,
         category: category || "OTHER",
-        isEmailVerified: true, // Set email as verified since OTP was successful
+        isEmailVerified: true,
+        isVerified: true,
       },
       select: {
         id: true,
@@ -123,6 +124,25 @@ export async function POST(request: NextRequest) {
         walletBalance: true,
         createdAt: true,
         updatedAt: true,
+      },
+    });
+
+    // approve by default - new
+    await db.providerVerification.create({
+      data: {
+        provider: {
+          connect: {
+            id: newProvider.id,
+          },
+        },
+        address: "EMPTY",
+        orgName: name,
+        pocAadhaarDoc: "EMPTY",
+        pocAadhaarNum: "EMPTY",
+        pocName: (adminName as string) || (name as string) || "EMPTY",
+        pocPanDoc: "EMPTY",
+        pocPanNum: "EMPTY",
+        status: "VERIFIED",
       },
     });
 
