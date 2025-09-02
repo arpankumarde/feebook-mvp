@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import api from "@/lib/api";
 import type { AxiosError } from "axios";
-import { Gender } from "@prisma/client";
+import { Gender, Member } from "@prisma/client";
 import {
   Select,
   SelectContent,
@@ -26,7 +26,11 @@ import {
 import { useProviderAuth } from "@/hooks/use-provider-auth";
 import ProviderTopbar from "@/components/layout/provider/ProviderTopbar";
 import { toast } from "sonner";
-import { CheckCircleIcon, LightningIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import ShortUniqueId from "short-unique-id";
+import { APIResponse } from "@/types/common";
+import { useRouter } from "next/navigation";
+import { SLUGS } from "@/constants/slugs";
 
 interface MemberFormData {
   firstName: string;
@@ -49,14 +53,16 @@ interface ApiErrorResponse {
 }
 
 const Page = () => {
+  const router = useRouter();
   const { provider, loading: isAuthLoading } = useProviderAuth();
+  const { randomUUID } = new ShortUniqueId({ length: 8 });
   const [formData, setFormData] = useState<MemberFormData>({
     firstName: "",
     middleName: "",
     lastName: "",
     dateOfBirth: "",
     gender: "",
-    uniqueId: "",
+    uniqueId: randomUUID(),
     phone: "",
     email: "",
     category: "",
@@ -161,10 +167,18 @@ const Page = () => {
     }
 
     try {
-      await api.post("/api/v1/provider/member", { member: formData });
+      const { data } = await api.post<APIResponse<Member>>(
+        "/api/v1/provider/member",
+        {
+          member: formData,
+        }
+      );
       setSuccess(true);
       toast.success("Member added successfully!");
       resetForm();
+      router.push(
+        `/${SLUGS.PROVIDER}/fee-management?uniqueId=${data?.data?.uniqueId}`
+      );
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
       const errorMessage =
@@ -316,7 +330,7 @@ const Page = () => {
                     </Select>
                   </div>
 
-                  <div className="space-y-2 -mt-1.5">
+                  {/* <div className="space-y-2 -mt-1.5">
                     <span className="inline-flex justify-between items-center w-full">
                       <Label htmlFor="uniqueId">Unique ID *</Label>
                       <Button
@@ -343,7 +357,7 @@ const Page = () => {
                       placeholder="Enter unique identifier"
                       required
                     />
-                  </div>
+                  </div> */}
                 </div>
               </div>
 

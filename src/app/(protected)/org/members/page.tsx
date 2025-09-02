@@ -288,7 +288,7 @@ const MembersPage = () => {
               className="pl-10"
             />
           </div>
-          <Button className="gap-2 md:hidden w-full" asChild>
+          <Button className="gap-2 lg:hidden w-full md:w-auto" asChild>
             <Link href={`/${SLUGS.PROVIDER}/members/add`}>
               <PlusIcon weight="bold" />
               Add Member
