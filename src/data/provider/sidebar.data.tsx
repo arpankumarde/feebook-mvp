@@ -54,31 +54,31 @@ export const ProviderSidebarData = {
             />
           ),
         },
-        {
-          label: "Wallet",
-          key: "wallet",
-          icon: (
-            <WalletIcon
-              className="text-primary h-full w-full"
-              weight="duotone"
-            />
-          ),
-        },
+        // {
+        //   label: "Wallet",
+        //   key: "wallet",
+        //   icon: (
+        //     <WalletIcon
+        //       className="text-primary h-full w-full"
+        //       weight="duotone"
+        //     />
+        //   ),
+        // },
       ],
     },
     {
       label: "Settings",
       items: [
-        {
-          label: "KYC Verification",
-          key: "kyc",
-          icon: (
-            <IdentificationCardIcon
-              className="text-primary h-full w-full"
-              weight="duotone"
-            />
-          ),
-        },
+        // {
+        //   label: "KYC Verification",
+        //   key: "kyc",
+        //   icon: (
+        //     <IdentificationCardIcon
+        //       className="text-primary h-full w-full"
+        //       weight="duotone"
+        //     />
+        //   ),
+        // },
         {
           label: "Institution Profile",
           key: "profile",
@@ -89,16 +89,16 @@ export const ProviderSidebarData = {
             />
           ),
         },
-        {
-          label: "Settings",
-          key: "settings",
-          icon: (
-            <GearSixIcon
-              className="text-primary h-full w-full"
-              weight="duotone"
-            />
-          ),
-        },
+        // {
+        //   label: "Settings",
+        //   key: "settings",
+        //   icon: (
+        //     <GearSixIcon
+        //       className="text-primary h-full w-full"
+        //       weight="duotone"
+        //     />
+        //   ),
+        // },
       ],
     },
   ],
