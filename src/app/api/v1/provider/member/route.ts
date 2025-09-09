@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { Member } from "@prisma/client";
 import { ApiErrorHandler } from "@/lib/error-handler";
+import emailService from "@/lib/email-service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +18,19 @@ export async function POST(request: NextRequest) {
 
     const newMember = await db.member.create({
       data: memberData,
+      include: {
+        provider: true,
+      },
     });
+
+    if (newMember.email) {
+      await emailService.sendEmail({
+        to: newMember.email,
+        subject: `Welcome to ${newMember.provider.name} - Feebook`,
+        html: `You have been added to ${newMember.provider.name} by ${newMember.provider.adminName} on <a href="https://feebook.in/?ref=email">Feebook - Your unified payments platform</a>. Your ID is: ${newMember.uniqueId}`,
+        text: `You have been added to ${newMember.provider.name} by ${newMember.provider.adminName} on Feebook - Your unified payments platform. Your ID is: ${newMember.uniqueId}`,
+      });
+    }
 
     return NextResponse.json({ success: true, data: newMember });
   } catch (error) {
